@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>makBig - Student Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50 font-sans">
+<nav class="bg-indigo-700 text-white shadow-lg">
+  <!-- Navigation content here -->
+</nav>
+
+<div class="bg-white rounded-lg shadow p-4">
+  <h3 class="font-medium mb-3 flex items-center">
+    <i class="fas fa-headset text-indigo-600 mr-2"></i> Quick Help
+  </h3>
+
+  <textarea id="helpMessage" class="w-full mb-4 p-2 border rounded text-sm" placeholder="Add a message (optional)..."></textarea>
+
+   
+
+  <div class="space-y-3">
+    <button onclick="sendHelpRequest('week_review')" class="w-full flex items-center justify-between px-3 py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+    <span class="text-sm font-medium">Schedule Week Review</span>
+    <i class="fas fa-calendar-check text-indigo-600"></i>
+   </button>
+    <button onclick="sendHelpRequest('urgent_review')" class="w-full flex items-center justify-between px-3 py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+      <span class="text-sm font-medium">Schedule Urgent Review</span>
+      <i class="fas fa-calendar-plus text-indigo-600"></i>
+    </button>
+    <button onclick="sendHelpRequest('doubt_session')" class="w-full flex items-center justify-between px-3 py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+      <span class="text-sm font-medium">Request Doubt Session</span>
+      <i class="fas fa-question-circle text-indigo-600"></i>
+    </button>
+    <button onclick="sendHelpRequest('report_issue')" class="w-full flex items-center justify-between px-3 py-2 bg-indigo-50 rounded-lg hover:bg-indigo-100">
+      <span class="text-sm font-medium">Report Issue</span>
+      <i class="fas fa-exclamation-circle text-indigo-600"></i>
+    </button>
+    
+
+  </div>
+</div>
+
+<script>
+// Helper function to get CSRF token from cookie (needed if you enable CSRF protection)
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const c = cookie.trim();
+      if (c.startsWith(name + '=')) {
+        cookieValue = decodeURIComponent(c.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+function sendHelpRequest(type) {
+  const message = document.getElementById('helpMessage').value;
+  const csrftoken = getCookie('csrftoken');
+
+  fetch('/review/submit-help/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': csrftoken // use this header if CSRF enabled, ignore if @csrf_exempt used
+    },
+    body: `type=${type}&message=${encodeURIComponent(message)}`
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    alert(data.message);
+    if (data.status === 'success') {
+      document.getElementById('helpMessage').value = '';
+    }
+  })
+  .catch(error => {
+    alert('Something went wrong!');
+    console.error('Fetch error:', error);
+  });
+}
+</script>
+
+</body>
+</html>

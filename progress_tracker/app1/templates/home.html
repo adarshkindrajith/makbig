@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to makBig</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to bottom right, #e3f2fd, rgb(234, 238, 241));
+      color: #0d47a1;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+
+    .fancy-heading {
+      font-size: 3.5vw;
+      max-width: 90%;
+      text-align: center;
+      font-weight: 800;
+      background: linear-gradient(90deg, #1565c0, #42a5f5);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: fadeIn 1.2s ease forwards;
+      text-shadow: 0 2px 4px rgba(21, 101, 192, 0.3);
+      margin-bottom: 40px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .logincontainer {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 30px 20px;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      text-align: center;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .logincontainer a {
+      display: block;
+      width: 100%;
+      padding: 14px 20px;
+      margin: 12px 0;
+      text-decoration: none;
+      color: #ffffff;
+      background: #1976d2;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      position: relative;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    .logincontainer a::after {
+      content: '→';
+      position: absolute;
+      right: 20px;
+      opacity: 0.7;
+      transition: right 0.3s ease;
+    }
+
+    .logincontainer a:hover {
+      background-color: #1565c0;
+      transform: translateY(-2px);
+    }
+
+    .logincontainer a:hover::after {
+      right: 15px;
+      opacity: 1;
+    }
+
+    /* Mobile adjustments */
+    @media (max-width: 480px) {
+      .fancy-heading {
+        font-size: 8vw;
+      }
+
+      .logincontainer {
+        padding: 25px 15px;
+      }
+
+      .logincontainer a {
+        font-size: 0.95rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Enhanced Responsive Heading -->
+  <h1 class="fancy-heading">Welcome to makBig 👨‍💻</h1>
+
+  <!-- Login Buttons -->
+  <div class="logincontainer">
+    <a href="{% url 'studentlogin' %}">STUDENTS LOGIN</a>
+    <a href="{% url 'teacherlogin' %}">TEACHERS LOGIN</a>
+  </div>
+
+</body>
+</html>

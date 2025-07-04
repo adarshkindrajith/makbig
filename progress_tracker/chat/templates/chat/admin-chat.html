@@ -1,0 +1,656 @@
+
+{% load static %}
+{% load humanize %}
+{% block content %}
+
+<!-- Keep all your CSS and JS includes unchanged -->
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    makblue: '#2563EB',
+                    makgreen: '#10B981',
+                    makred: '#EF4444',
+                    makyellow: '#F59E0B',
+                    makgray: '#F3F4F6',
+                }
+            }
+        }
+    }
+</script>
+
+<!-- Layout and structure unchanged -->
+
+<div class="flex h-screen overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- Header -->
+        <header class="bg-white border-b border-gray-200 p-1 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-bold text-makblue">makBig Admin Panel</h1>
+                <p class="text-xs text-gray-500">Chat control section</p>
+            </div>
+            <h2 class="text-lg font-bold text-gray-800">Admin Chat Overview</h2>
+            <div class="flex space-x-2">
+                <a href="{% url 'chatroom' %}" class="p-2 text-gray-500 hover:text-makblue hover:bg-gray-100 rounded-full" title="Back to Chatroom">
+                    <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- Pinned Messages Section -->
+        <main id="main-chat-container" class="flex-1 overflow-y-auto bg-makgray relative">
+            <div class="bg-white rounded-lg shadow-md mb-4 sticky top-0 z-10">
+                <div class="p-2 border-b border-gray-200 flex items-center justify-between">
+                    <h3 class="text-md font-semibold text-gray-800">
+                        <i class="fas fa-thumbtack mr-2 text-makblue"></i>Pinned Messages (Admin View)
+                    </h3>
+                </div>
+                <div id="pinned-zone" class="p-2 space-y-1">
+                    {% for msg in messages %}
+                        {% if msg.pinned %}
+                            <div class="flex items-start message-item border-b border-gray-100 pb-1 last:border-b-0" data-msg-id="{{ msg.id }}" id="msg-{{ msg.id }}">
+                                
+                                <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% else %}{% static 'profile' %}{% endif %}" alt="User" class="w-10 h-10 rounded-full mr-2 mt-1">
+                                
+                                <div class="flex-1">
+                                    <div class="flex items-center">
+                                        <span class="font-bold text-md mr-2">
+                                            {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
+                                        </span>
+                                        {% if msg.student and msg.student.badge %}
+                                            <img src="{{ msg.student.badge.url }}" alt="Badge" class="w-4 h-4 rounded-full mr-1">
+                                        {% endif %}
+                                        <span class="text-xs text-gray-500 ml-auto">{{ msg.timestamp|timesince }} ago</span>
+                                    </div>
+
+                                    {% if msg.replied_to %}
+                                        <div class="bg-gray-100 p-2 rounded-md border-l-4 border-makblue mb-2 reply-info">
+                                            <p class="text-sm text-gray-600">Replying to 
+                                                <span class="font-semibold">
+                                                    {% if msg.replied_to.student %}{{ msg.replied_to.student.s_firstname }} {{ msg.replied_to.student.s_lastname }}{% else %}{{ msg.replied_to.superuser.first_name }} {{ msg.replied_to.superuser.last_name }}{% endif %}
+                                                </span>:
+                                            </p>
+                                            <p class="text-sm italic text-gray-700">{{ msg.replied_to.content|truncatechars:50 }}</p>
+                                        </div>
+                                    {% endif %}
+
+                                    <p class="mt-0.5 text-base font-bold {% if msg.reported %}text-makred{% else %}text-gray-700{% endif %} message-content-p">{{ msg.content }}</p>
+
+                                    <div class="flex justify-end mt-1">
+                                        <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
+                                            <i class="fas fa-trash-alt mr-1"></i>Delete
+                                        </button>
+                                        <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 bg-makgreen text-white text-xs rounded hover:bg-green-600 pin-btn">
+                                            <i class="fas fa-thumbtack mr-1"></i> Un-pin
+                                        </button>
+                                        <button onclick="toggleReport({{ msg.id }})" id="report-btn-{{ msg.id }}" class="px-2 py-2 text-white text-xs rounded report-btn {% if msg.reported %}bg-makred hover:bg-red-600{% else %}bg-makyellow hover:bg-yellow-600{% endif %}">
+                                            <i class="fas fa-flag mr-1"></i> {% if msg.reported %}Un-report{% else %}Report{% endif %}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Main Chat Messages -->
+            <div id="chat-box" class="space-y-3 p-3">
+                {% for msg in messages %}
+                    {% if not msg.pinned %}
+                        <div class="bg-white rounded-lg shadow-sm overflow-hidden message-item" data-msg-id="{{ msg.id }}" id="msg-{{ msg.id }}">
+                            <div class="p-3">
+                                <div class="flex items-start">
+                                    <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" alt="User" class="w-10 h-10 rounded-full mr-2 mt-1">
+                                    <div class="flex-1">
+                                        <div class="flex items-center">
+                                            <span class="font-bold text-md mr-2">
+                                                {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
+                                            </span>
+                                            {% if msg.student and msg.student.badge %}
+                                                <img src="{{ msg.student.badge.url }}" alt="Badge" class="w-8 h-8 rounded-full mr-1">
+                                            {% endif %}
+                                            <span class="text-md text-gray-500 ml-auto">{{ msg.timestamp|timesince }} ago</span>
+                                        </div>
+
+                                        {% if msg.replied_to %}
+                                            <div class="bg-gray-100 p-2 rounded-md border-l-4 border-makblue mb-2 reply-info">
+                                                <p class="text-sm text-gray-600">Replying to 
+                                                    <span class="font-semibold">
+                                                        {% if msg.replied_to.student %}{{ msg.replied_to.student.s_firstname }} {{ msg.replied_to.student.s_lastname }}{% else %}{{ msg.replied_to.superuser.first_name }} {{ msg.replied_to.superuser.last_name }}{% endif %}
+                                                    </span>:
+                                                </p>
+                                                <p class="text-sm italic text-gray-700">{{ msg.replied_to.content|truncatechars:50 }}</p>
+                                            </div>
+                                        {% endif %}
+
+                                        <p class="mt-0.5 text-base {% if msg.reported %}text-makred{% else %}text-gray-700{% endif %} message-content-p">{{ msg.content }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 px-3 py-2 flex justify-end space-x-1">
+                                <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
+                                    <i class="fas fa-trash-alt mr-1"></i>Delete
+                                </button>
+                                <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 bg-makgreen text-white text-xs rounded hover:bg-green-600 pin-btn">
+                                    <i class="fas fa-thumbtack mr-1"></i> Pin
+                                </button>
+                                
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </main>
+
+        <!-- Message Input Section for Admin -->
+        <div class="p-3 bg-white border-t border-gray-200 flex items-center">
+            <div id="reply-preview" class="hidden bg-gray-100 p-2 border-l-4 border-makblue mb-2 mx-3">
+                <p class="text-sm text-gray-600">Replying to <span id="reply-username" class="font-semibold"></span>:</p>
+                <p class="text-sm italic text-gray-700" id="reply-content"></p>
+                <button onclick="cancelReply()" class="text-xs text-makred hover:underline ml-2" id="cancel-reply-btn">Cancel</button>
+            </div>
+
+            <div class="flex space-x-2">
+                <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-makblue">
+                <button id="send-button" class="ml-2 px-4 py-2 bg-makblue text-white rounded hover:bg-blue-700">
+                    <i class="fas fa-paper-plane mr-1"></i> Send
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Sidebar for Reported Messages -->
+    <aside class="w-80 bg-white border-l border-gray-200 flex flex-col p-4 shadow-lg overflow-y-auto">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Reported Message Summary</h3>
+        <ul id="reported-messages" class="space-y-3">
+            {% for msg in reported_msgs %}
+                <li id="reported-{{ msg.id }}" class="bg-gray-50 rounded-lg p-3 shadow-sm">
+                    <div class="flex items-start mb-2">
+                        <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" alt="Reported User" class="w-10 h-10 rounded-full mr-2">
+                        <div class="flex-1">
+                            <div class="font-semibold text-sm text-gray-800">
+                                {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
+                            </div>
+                            <span class="text-xs text-gray-500">{{ msg.timestamp|timesince }} ago</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-3">{{ msg.content|truncatewords:10 }}</p>
+                    <button onclick="deleteMessage({{ msg.id }})" class="w-full px-2 py-1 bg-makred text-white text-sm rounded hover:bg-red-600 mb-1">
+                        <i class="fas fa-trash-alt mr-1"></i> Delete Message
+                    </button>
+                    <button onclick="toggleReport({{ msg.id }})" class="w-full px-2 py-1 text-white text-sm rounded report-btn {% if msg.reported %}bg-makred hover:bg-red-600{% else %}bg-makyellow hover:bg-yellow-600{% endif %}">
+                        <i class="fas fa-flag mr-1"></i> {% if msg.reported %}Un-report{% else %}Report{% endif %}
+                    </button>
+                </li>
+            {% empty %}
+                <li id="no-reports" class="bg-gray-50 rounded-lg p-3 text-center text-gray-600">Nothing reported yet 🎉</li>
+            {% endfor %}
+        </ul>
+    </aside>
+</div>
+
+
+<script>
+    const chatBox = document.getElementById("chat-box");
+    const pinnedZone = document.getElementById("pinned-zone");
+    const reportedMessagesList = document.getElementById("reported-messages");
+    const mainChatContainer = document.getElementById("main-chat-container");
+
+    const protocol = location.protocol === "https:" ? "wss" : "ws";
+    const chatSocket = new WebSocket(`${protocol}://${location.host}/ws/chat/`);
+
+    const deletedMessages = new Set(); // To prevent re-adding deleted messages
+
+    const messageInput = document.getElementById("message-input");
+    const sendButton = document.getElementById("send-button");
+
+
+    const replyUsername = document.getElementById("reply-username");
+    const replyContent = document.getElementById("reply-content");
+    const replyPreview = document.getElementById("reply-preview");
+    const cancelReplyButton = document.getElementById("cancel-reply-btn");    
+
+    if (cancelReplyButton) {
+            cancelReplyButton.onclick = cancelReply;
+        }
+
+
+    // Helper function to format time
+    function timeAgo(date) {
+        const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+        const intervals = {
+            year: 31536000,
+            month: 2592000,
+            week: 604800,
+            day: 86400,
+            hour: 3600,
+            minute: 60,
+            second: 1
+        };
+
+        for (const [unit, value] of Object.entries(intervals)) {
+            const amount = Math.floor(seconds / value);
+            if (amount >= 1) {
+                return `${amount} ${unit}${amount > 1 ? 's' : ''} ago`;
+            }
+        }
+        return 'just now';
+    }
+
+    // Function to delete a message - NO CONFIRMATION
+    function deleteMessage(id) {
+        console.log(`[deleteMessage] Sending delete request for message with ID: ${id}`);
+        chatSocket.send(JSON.stringify({
+            type: "delete", // Frontend sends 'type: "delete"'
+            id: id
+        }));
+    }
+
+    // Function to toggle message report status
+    let replyingToMessageId = null;
+
+    function replyToMessage(messageId, userName, messageContent) {
+        replyingToMessageId = messageId;
+        if (replyUsername) replyUsername.textContent = userName;
+        if (replyContent) replyContent.textContent = messageContent;
+        if (replyPreview) replyPreview.classList.remove("hidden");
+        if (messageInput) messageInput.focus();
+        mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
+        console.log(`[replyToMessage] Replying to message ID: ${messageId}`);
+    }
+
+
+    function cancelReply() {
+        replyingToMessageId = null;
+        if (replyUsername) replyUsername.textContent = "";
+        if (replyContent) replyContent.textContent = "";
+        if (replyPreview) replyPreview.classList.add("hidden");
+        console.log("[cancelReply] Reply cancelled.");
+    }
+
+
+    // Function to toggle message pin status
+    function pinMessage(id) {
+        console.log(`[pinMessage] Toggling pin status for message with ID: ${id}`);
+        const msgDiv = document.getElementById(`msg-${id}`);
+        const btn = msgDiv ? msgDiv.querySelector(".pin-btn") : null;
+        
+        const currentlyPinned = btn && btn.textContent.trim().toLowerCase().includes("un-pin");
+
+        console.log(`[pinMessage] Message ID: ${id}, Current pinned status: ${currentlyPinned}. Sending new status: ${!currentlyPinned}`);
+        chatSocket.send(JSON.stringify({
+            type: "pin", // Frontend sends 'type: "pin"'
+            id: id,
+            value: !currentlyPinned
+        }));
+    }
+
+
+    function toggleReport(id) {
+        console.log(`[toggleReport] Toggling report status for message with ID: ${id}`);
+        chatSocket.send(JSON.stringify({
+            type: "report",
+            id: id
+        }));
+    }
+
+
+    // Function to create HTML for a message item
+    function createMessageHtml(data, isPinned) {
+        const sender = data.sender || {
+            id: data.user ? data.user.id : null,
+            first_name: data.user ? data.user.s_firstname : '',
+            last_name: data.user ? data.user.s_lastname : '',
+            username: data.user ? data.user.username : 'Unknown',
+            profile_pic: data.user ? data.user.s_profilepicture : "{% static 'profile_pics/wallpaper.jpg' %}",
+            badge: data.user ? data.user.badge : '',
+            is_superuser: data.user ? data.user.is_superuser : false,
+        };
+
+        const fullName = `${sender.first_name || ''} ${sender.last_name || ''}`.trim();
+        const displayName = fullName || sender.username || 'Unknown User';
+        
+        const isReported = data.reported || false;
+        const profilePicSrc = sender.profile_pic || "{% static 'profile_pics/wallpaper.jpg' %}";
+        const badgeSrc = sender.badge || '';
+
+        const safeDisplayName = displayName.replace(/'/g, "\\'");
+        const safeContent = (data.content || "").replace(/'/g, "\\'");
+
+        let replyHtml = '';
+        if (data.replied_to) {
+            const repliedToUser = data.replied_to.sender || data.replied_to.user || {};
+            const repliedFirst = repliedToUser.first_name || repliedToUser.s_firstname || '';
+            const repliedLast = repliedToUser.last_name || repliedToUser.s_lastname || '';
+            const repliedDisplay = `${repliedFirst} ${repliedLast}`.trim() || repliedToUser.username || 'Unknown User';
+            const repliedContent = data.replied_to.content || '';
+
+            replyHtml = `
+                <div class="bg-gray-100 p-2 rounded-md border-l-4 border-makblue mb-2 reply-info">
+                    <p class="text-sm text-gray-600">Replying to <span class="font-semibold">${repliedDisplay}</span>:</p>
+                    <p class="text-sm italic text-gray-700">${repliedContent.slice(0, 50)}${repliedContent.length > 50 ? '...' : ''}</p>
+                </div>
+            `;
+        }
+
+        const pinButtonText = isPinned ? "Un-pin" : "Pin";
+        const pinButtonColor = isPinned ? 'bg-makyellow hover:bg-yellow-600' : 'bg-makgreen hover:bg-green-600';
+        const messageContentClass = isReported ? 'text-makred font-bold' : 'text-gray-700';
+
+        const replyButtonHtml = `
+            <button onclick="replyToMessage(${data.id}, '${safeDisplayName}', '${safeContent}')" 
+                class="px-2 py-2 bg-makblue text-white text-xs rounded hover:bg-blue-600 ml-1">
+                <i class="fas fa-reply mr-1"></i> Reply
+            </button>
+        `;
+
+        const messageInnerHtml = `
+            <div class="p-3">
+                <div class="flex items-start">
+                    <img src="${profilePicSrc}" alt="User" class="w-10 h-10 rounded-full mr-2 mt-1">
+                    <div class="flex-1">
+                        <div class="flex items-center">
+                            <span class="font-bold text-md mr-2">${displayName}</span>
+                            ${badgeSrc && !sender.is_superuser ? `<img src="${badgeSrc}" alt="Badge" class="w-4 h-4 rounded-full mr-1">` : ""}
+                            <span class="text-md text-gray-500 ml-auto">${timeAgo(data.timestamp)}</span>
+                        </div>
+                        ${replyHtml}
+                        <p class="mt-0.5 text-base message-content-p ${messageContentClass}">${data.content}</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-3 py-2 flex justify-end space-x-1">
+                <button onclick="deleteMessage(${data.id})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
+                    <i class="fas fa-trash-alt mr-1"></i> Delete
+                </button>
+                <button onclick="pinMessage(${data.id})" class="px-2 py-2 ${pinButtonColor} text-white text-xs rounded pin-btn">
+                    <i class="fas fa-thumbtack mr-1"></i> ${pinButtonText}
+                </button>
+                ${replyButtonHtml}
+            </div>
+        `;
+
+        return messageInnerHtml;
+    }
+
+
+    // Function to add/move message to the appropriate area (chatbox or pinned)
+    function addOrMoveMessage(data, isPinned) {
+        console.log(`[addOrMoveMessage] Processing message ID: ${data.id}, Pinned: ${isPinned}`);
+        if (deletedMessages.has(data.id)) {
+            console.log(`[addOrMoveMessage] Message ID: ${data.id} is marked as deleted, skipping.`);
+            return;
+        }
+
+        let existingDiv = document.getElementById(`msg-${data.id}`);
+        
+        if (existingDiv) {
+            console.log(`[addOrMoveMessage] Removing existing element for ID: ${data.id}`);
+            existingDiv.remove(); // Remove from current location if it exists
+        }
+
+        const newDiv = document.createElement("div");
+        newDiv.setAttribute("data-msg-id", data.id);
+        newDiv.setAttribute("id", `msg-${data.id}`);
+        newDiv.innerHTML = createMessageHtml(data, isPinned);
+
+        if (isPinned) {
+            newDiv.className = "bg-white rounded-lg shadow-sm overflow-hidden message-item border-b border-gray-100 pb-1 last:border-b-0";
+            // Insert in order of timestamp if possible, otherwise at top for simplicity
+            let inserted = false;
+            // Store message data on the element for sorting (needed if you want complex sorting on the frontend)
+            newDiv.setAttribute('data-timestamp', new Date(data.timestamp).getTime()); 
+
+            for (let i = 0; i < pinnedZone.children.length; i++) {
+                const existingMsg = pinnedZone.children[i];
+                const existingTimestamp = parseInt(existingMsg.getAttribute('data-timestamp'));
+                const newTimestamp = new Date(data.timestamp).getTime();
+                if (newTimestamp > existingTimestamp) { // Insert newer message before older ones
+                    pinnedZone.insertBefore(newDiv, existingMsg);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) {
+                pinnedZone.appendChild(newDiv); // Add to end if it's the oldest or no other messages
+            }
+            console.log(`[addOrMoveMessage] Appended message ID: ${data.id} to pinned zone.`);
+        } else {
+            newDiv.className = "bg-white rounded-lg shadow-sm overflow-hidden message-item";
+            chatBox.appendChild(newDiv);
+            mainChatContainer.scrollTop = mainChatContainer.scrollHeight; // Scroll to bottom for new messages
+            console.log(`[addOrMoveMessage] Appended message ID: ${data.id} to chat box and scrolled down.`);
+        }
+    }
+
+    // Function to update the reported messages sidebar
+    function updateReportedSidebar(data) {
+        console.log(`[updateReportedSidebar] Processing reported status for message ID: ${data.id}, Reported: ${data.reported}`);
+        const placeholder = document.getElementById("no-reports");
+        if (placeholder) {
+            placeholder.remove();
+            console.log("[updateReportedSidebar] Removed 'no reports' placeholder.");
+        }
+
+        let existingReportedItem = document.getElementById(`reported-${data.id}`);
+
+        // Ensure sender data is available for the sidebar item
+        const sender = data.sender || {};
+        const fullName = `${sender.first_name || ''} ${sender.last_name || ''}`.trim();
+        const displayName = fullName || sender.username || data.username;
+        const profilePicSrc = sender.profile_pic || data.profile_pic || "{% static 'profile_pics/wallpaper.jpg' %}";
+
+
+        if (data.reported) { // Message is now reported
+            if (!existingReportedItem) { // Add if it doesn't exist
+                console.log(`[updateReportedSidebar] Adding message ID: ${data.id} to reported sidebar.`);
+                const li = document.createElement("li");
+                li.id = `reported-${data.id}`;
+                li.className = "bg-gray-50 rounded-lg p-3 shadow-sm";
+                
+                li.innerHTML = `
+                    <div class="flex items-start mb-2">
+                        <img src="${profilePicSrc}" alt="Reported User" class="w-10 h-10 rounded-full mr-2">
+                        <div class="flex-1">
+                            <div class="font-semibold text-sm text-gray-800">${displayName}</div>
+                            <span class="text-xs text-gray-500">${timeAgo(data.timestamp)}</span>
+                        </div>
+                    </div>
+                    <p class="text-sm text-gray-700 mb-3">${data.content.slice(0, 100)}${data.content.length > 100 ? '...' : ''}</p>
+                    <button onclick="deleteMessage(${data.id})" class="w-full px-2 py-1 bg-makred text-white text-sm rounded hover:bg-red-600 mb-1">
+                        <i class="fas fa-trash-alt mr-1"></i> Delete Message
+                    </button>
+                    <button onclick="toggleReport(${data.id})" 
+                        class="w-full px-2 py-1 text-white text-sm rounded report-btn bg-makred hover:bg-red-600">
+                        <i class="fas fa-flag mr-1"></i> Un-report
+                    </button>
+                `;
+                reportedMessagesList.prepend(li); // Prepend to show newest reported on top
+            } else {
+                console.log(`[updateReportedSidebar] Updating existing reported item for ID: ${data.id}.`);
+                // If already in sidebar, just ensure button text and classes are correct
+                const reportBtn = existingReportedItem.querySelector(".report-btn");
+                if (reportBtn) {
+                    reportBtn.classList.remove('bg-makyellow', 'hover:bg-yellow-600');
+                    reportBtn.classList.add('bg-makred', 'hover:bg-red-600');
+                    reportBtn.innerHTML = `<i class="fas fa-flag mr-1"></i> Un-report`;
+                }
+            }
+        } else { // Message is now un-reported
+            if (existingReportedItem) {
+                console.log(`[updateReportedSidebar] Removing message ID: ${data.id} from reported sidebar.`);
+                existingReportedItem.remove();
+            }
+            // If no reported messages left, show the placeholder
+            if (!reportedMessagesList.querySelector("li[id^='reported-']")) {
+                console.log("[updateReportedSidebar] All reported messages removed, adding placeholder.");
+                const li = document.createElement("li");
+                li.id = "no-reports";
+                li.className = "bg-gray-50 rounded-lg p-3 text-center text-gray-600";
+                li.innerText = "Nothing reported yet 🎉";
+                reportedMessagesList.appendChild(li);
+            }
+        }
+    }
+
+    // WebSocket message handler
+    chatSocket.onmessage = e => {
+        const data = JSON.parse(e.data);
+        console.log("[onmessage] WebSocket message received:", data); // Log the full incoming data object
+
+        // --- Handle specific message types directly based on 'type' property ---
+
+        if (data.type === 'chat_history') {
+            console.log("[onmessage] Processing chat history...");
+            // It's good practice to clear existing UI elements before rendering fresh history
+            // chatBox.innerHTML = '';
+            // pinnedZone.innerHTML = '';
+            // reportedMessagesList.innerHTML = '';
+            // deletedMessages.clear();
+
+            data.messages.forEach(msg => {
+                // History messages come with 'user' instead of 'sender' at the top level
+                // We map them to the expected 'sender' structure for createMessageHtml
+                if (msg.user) {
+                    msg.sender = {
+                        id: msg.user.id,
+                        first_name: msg.user.s_firstname,
+                        last_name: msg.user.s_lastname,
+                        username: msg.user.username,
+                        profile_pic: msg.user.s_profilepicture,
+                        badge: msg.user.badge,
+                        is_superuser: msg.user.is_superuser,
+                    };
+                }
+                // Handle replied_to sender if it's there
+                if (msg.replied_to && msg.replied_to.user) {
+                    // This is already structured correctly by _serialize_message
+                    // msg.replied_to.user will contain s_firstname, s_lastname, etc.
+                }
+
+                if (!deletedMessages.has(msg.id)) {
+                    addOrMoveMessage(msg, msg.pinned);
+                    if (msg.reported) {
+                        updateReportedSidebar(msg);
+                    }
+                }
+            });
+            return; // Exit after processing history
+        }
+
+        // Handle new messages, pin updates, and report updates (all come as 'new_message' with 'message_data')
+        if (data.type === 'new_message' && data.message_data) {
+            const msgData = data.message_data;
+            console.log(`[onmessage] Handling 'new_message' (or update) for ID: ${msgData.id}, Pinned: ${msgData.pinned}, Reported: ${msgData.reported}`);
+
+            if (deletedMessages.has(msgData.id)) {
+                console.log(`[onmessage] Message ID: ${msgData.id} is marked as deleted, skipping render.`);
+                return;
+            }
+
+            addOrMoveMessage(msgData, msgData.pinned);
+            updateReportedSidebar(msgData); 
+            return; // Exit after processing
+        }
+
+        // Handle delete notification
+        if (data.type === "delete") { // <--- THIS IS THE TARGETED CHECK
+            const msgId = data.id;
+            console.log(`[onmessage] *** RECEIVED DELETE COMMAND FOR ID: ${msgId} ***`); // VERY IMPORTANT LOG
+
+            if (deletedMessages.has(msgId)) {
+                console.log(`[onmessage] Message ID: ${msgId} already marked as deleted. Skipping DOM removal.`);
+                return;
+            }
+            deletedMessages.add(msgId); // Mark as deleted immediately
+
+            // Remove from main chat/pinned zone
+            const msgElement = document.getElementById(`msg-${msgId}`);
+            if (msgElement) {
+                msgElement.remove();
+                console.log(`[onmessage] Removed message element ID: msg-${msgId} from DOM.`);
+            } else {
+                console.warn(`[onmessage] Message element ID: msg-${msgId} not found in main chat/pinned zone.`);
+            }
+
+            // Remove from reported list
+            const reportedElement = document.getElementById(`reported-${msgId}`);
+            if (reportedElement) {
+                reportedElement.remove();
+                console.log(`[onmessage] Removed message element ID: reported-${msgId} from reported sidebar.`);
+            } else {
+                console.warn(`[onmessage] Reported message element ID: reported-${msgId} not found in sidebar.`);
+            }
+
+            // Update reported placeholder if needed
+            if (reportedMessagesList && !reportedMessagesList.querySelector("li[id^='reported-']")) {
+                console.log("[onmessage] No more reported messages, adding placeholder.");
+                const li = document.createElement("li");
+                li.id = "no-reports";
+                li.className = "bg-gray-50 rounded-lg p-3 text-center text-gray-600";
+                li.innerText = "Nothing reported yet 🎉";
+                reportedMessagesList.appendChild(li);
+            }
+            return; // Stop further processing
+        }
+        
+        // Fallback for any other unhandled data types - good for debugging
+        console.warn("[onmessage] Unhandled WebSocket message type or structure:", data);
+    };
+
+    // WebSocket event listeners for robust connection handling
+    chatSocket.onopen = function(e) {
+        console.log("[onopen] WebSocket connection established.");
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('[onclose] WebSocket closed unexpectedly. Code: ', e.code, ' Reason: ', e.reason);
+        // Implement re-connection logic with a delay to avoid hammering the server
+        setTimeout(() => {
+            console.log("Attempting to reconnect...");
+            // Simplest way to re-establish connection by reloading, but consider a more
+            // sophisticated approach for production (e.g., creating a new WebSocket instance)
+            // window.location.reload(); 
+        }, 3000); 
+    };
+
+    chatSocket.onerror = function(e) {
+        console.error('[onerror] WebSocket error: ', e);
+    };
+
+    // Initial scroll to bottom when the page loads, for regular chat messages
+    document.addEventListener('DOMContentLoaded', () => {
+        mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
+
+        sendButton.addEventListener("click", () => {
+            const message = messageInput.value.trim();
+            if (message) {
+                chatSocket.send(JSON.stringify({
+                    type: "message",
+                    message: message,
+                    replied_to: replyingToMessageId
+                }));
+                messageInput.value = "";
+                cancelReply();
+            }
+        });
+
+        messageInput.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                sendButton.click();
+            }
+        });
+    
+    
+    });
+
+</script>
+{% endblock content %}

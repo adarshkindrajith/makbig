@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Login</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome for icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-indigo-100 to-blue-200 min-h-screen flex items-center justify-center">
+
+  <div class="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md transition-transform transform hover:scale-[1.01]">
+    <h2 class="text-3xl font-extrabold text-center text-indigo-700 mb-6">👨‍🎓 Student Login</h2>
+
+    <form method="POST" class="space-y-5">
+      {% csrf_token %}
+
+      <!-- Email -->
+      <div>
+        <label for="login-email" class="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-envelope text-gray-400"></i>
+          </span>
+          <input
+            id="login-email"
+            name="s_email"
+            type="email"
+            required
+            placeholder="you@example.com"
+            class="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+        </div>
+      </div>
+
+      <!-- Password -->
+      <div class="relative w-full">
+        <label for="login-password" class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i class="fas fa-lock text-gray-400"></i>
+          </span>
+          <input
+            id="login-password"
+            name="password"
+            type="password"
+            required
+            placeholder="••••••••"
+            class="w-full pl-10 pr-10 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+           <button type="button" id="toggle-password" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-600">
+                 <i class="fas fa-eye" id="eye-icon"></i>
+            </button>
+        </div>
+       
+      </div>
+
+      <!-- Submit Button -->
+      <div>
+        <button
+          type="submit"
+          class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-semibold py-2 rounded-lg hover:from-indigo-700 hover:to-indigo-600 transition duration-200"
+        >
+          Sign In
+        </button>
+      </div>
+    </form>
+
+    <!-- Error Messages -->
+    {% for message in messages %}
+      <p class="text-red-500 text-sm mt-2">{{ message }}</p>
+    {% endfor %}
+
+    <!-- Divider -->
+    <div class="flex items-center my-6">
+      <div class="flex-grow border-t border-gray-300"></div>
+      <span class="mx-3 text-sm text-gray-400">or</span>
+      <div class="flex-grow border-t border-gray-300"></div>
+    </div>
+
+    <!-- Signup Link -->
+    <p class="text-sm text-center text-gray-600">
+      Don’t have an account?
+      <a href="{% url 'student_register' %}" class="text-indigo-600 font-semibold hover:underline">Sign up here</a>
+    </p>
+  </div>
+
+ <script>
+  const toggleBtn = document.getElementById('toggle-password');
+  const passwordInput = document.getElementById('login-password');  // ✅ Correct ID here
+  const eyeIcon = document.getElementById('eye-icon');
+
+  toggleBtn.addEventListener('click', function () {
+    const type = passwordInput.getAttribute('type');
+    if (type === 'password') {
+      passwordInput.setAttribute('type', 'text');
+      eyeIcon.classList.remove('fa-eye');
+      eyeIcon.classList.add('fa-eye-slash');
+    } else {
+      passwordInput.setAttribute('type', 'password');
+      eyeIcon.classList.remove('fa-eye-slash');
+      eyeIcon.classList.add('fa-eye');
+    }
+  });
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Chat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl font-extrabold text-gray-800 mb-6">💬   Review Status</h2>
+
+    {% for request in help_requests %}
+      <div class="bg-white rounded-2xl shadow-md p-5 mb-4 hover:shadow-lg transition">
+        <div class="flex justify-between items-center mb-2">
+          <h3 class="text-lg font-semibold text-gray-700">
+            {{ request.get_request_type_display }} Request
+          </h3>
+          {% if request.accepted_by %}
+            <span class="text-sm text-green-600 font-medium">
+              <i class="fas fa-user-check mr-1"></i> Accepted by {{ request.accepted_by.username }}
+            </span>
+          {% endif %}
+        </div>
+        
+        <div class="text-sm text-gray-500 flex items-center space-x-2">
+          <i class="far fa-clock"></i>
+          <span>{{ request.created_at|date:"M d, Y  " }}</span>
+        </div>
+      </div>
+    {% empty %}
+      <div class="text-center text-gray-500 text-sm">
+        No chat requests found.
+      </div>
+    {% endfor %}
+  </div>
+</body>
+</html>

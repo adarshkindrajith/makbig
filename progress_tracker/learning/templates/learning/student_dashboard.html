@@ -1,0 +1,346 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>makBig - Student Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-sans">
+
+  <!-- Navigation -->
+  <nav class="bg-indigo-700 text-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <div class="flex items-center">
+          <i class="fas fa-code text-2xl mr-2"></i>
+          <span class="text-xl font-bold">makBig</span>
+          <div class="hidden md:flex ml-10 space-x-4">
+            <a href="#" class="px-3 py-2 rounded-md text-sm font-medium bg-indigo-900">Dashboard</a>
+            <a href="{% url 'modules' %}" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Modules</a>
+            <a href="#study-materials" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Materials</a>
+          </div>
+        </div>
+        <div class="hidden md:flex items-center space-x-4">
+          <a href="{% url 'chatroom' %}" class="relative p-2 text-indigo-200 hover:text-white">
+            <i class="fas fa-comment-dots text-xl"></i>
+            <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+          </a>
+          <div class="flex items-center">
+            <img class="h-8 w-8 rounded-full" src="{{ student.s_profilepicture.url }}" alt="">
+            <span class="ml-2 text-sm font-medium">{{ student.s_email }}</span>
+          </div>
+        </div>
+        <div class="md:hidden">
+          <button id="mobile-menu-btn" class="p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-600">
+            <i class="fas fa-bars"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Menu -->
+      <div id="mobile-menu" class="md:hidden hidden mt-2 space-y-2">
+        <a href="#" class="block px-3 py-2 rounded-md text-sm font-medium bg-indigo-900">Dashboard</a>
+        <a href="{% url 'modules' %}" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Modules</a>
+        <a href="#study-materials" class="block px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-600">Materials</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Logout and Main Content -->
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="text-right">
+      <a href="{% url 'student_logout' %}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded">Logout</a>
+    </div>
+
+    <div class="flex flex-col lg:flex-row flex-wrap gap-6 justify-between mt-4">
+      <!-- Sidebar -->
+      <div class="w-full md:w-1/3 lg:w-1/4 bg-white rounded-lg shadow p-6">
+        <div class="flex flex-col items-center">
+          {% if student.s_profilepicture %}
+            <img src="{{ student.s_profilepicture.url }}" alt="Profile Picture" class="h-24 w-24 object-cover rounded-full mb-4">
+          {% else %}
+            <div class="h-24 w-24 flex items-center justify-center rounded-full bg-gray-300 text-gray-600 mb-4">No Photo</div>
+          {% endif %}
+          <div class="text-center space-y-1">
+            <h3 class="text-xl font-bold text-gray-800">{{ student.s_firstname }} {{ student.s_lastname }}</h3>
+            <p class="text-sm font-bold text-indigo-700">{{ course.name }}</p>
+          </div>
+          <div class="mt-4 flex space-x-2">
+            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">Qualification: {{ student.s_qualification }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Module Section -->
+      <div class="flex-1 max-w-full lg:max-w-3xl">
+        <h2 class="text-xl font-semibold mb-2">Welcome {{ student.s_firstname }} {{ student.s_lastname }}</h2>
+        <h3 class="text-lg font-medium">Current Module: {{ module.name }}</h3>
+        <p class="mb-2">Week {{ module.week }}</p>
+
+        <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+          <div class="bg-green-500 h-2 rounded-full progress" style="width: {{ progress }}%;"></div>
+        </div>
+        <p class="mb-4">{{ completed }} / {{ total }} tasks completed</p>
+
+        {% for item in task_statuses %}
+          <div class="mb-2 flex justify-between items-center">
+            <span>{{ item.task.title }}</span>
+            <button 
+              class="tick-btn px-3 py-1 text-white text-sm rounded {% if item.is_completed %}bg-gray-500{% else %}bg-green-600{% endif %}"
+              data-task-id="{{ item.task.id }}">
+              {% if item.is_completed %}Undo{% else %}Mark Complete{% endif %}
+            </button>
+          </div>
+        {% endfor %}
+
+        <div class="mt-4 flex gap-4 flex-wrap">
+          <button onclick="sendHelpRequest('urgent_review')" class="bg-red-600 text-white px-4 py-2 rounded">Schedule Urgent Review</button>
+          {% if completed == total %}
+            <button onclick="loadReviewPage()" class="review-btn bg-indigo-600 text-white px-4 py-2 rounded">Submit Review</button>
+          {% else %}
+            <button onclick="loadReviewPage()" class="review-btn hidden bg-indigo-600 text-white px-4 py-2 rounded">Submit Review</button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Badges -->
+      <div class="w-full lg:w-1/4 bg-gray-100 border border-gray-200 rounded-lg p-4">
+        <h3 class="text-lg font-semibold mb-4">🏅 Earned Badges</h3>
+        {% if student_badges %}
+          <ul class="space-y-3">
+            {% for student_badge in student_badges %}
+              <li class="flex items-center">
+                {% if student_badge.badge.image %}
+                  <img src="{{ student_badge.badge.image.url }}" class="h-10 w-10 object-contain rounded mr-3" alt="{{ student_badge.badge.name }}">
+                {% endif %}
+                <div><strong>{{ student_badge.badge.name }}</strong></div>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No badges earned yet.</p>
+        {% endif %}
+      </div>
+
+      <!-- Study Materials -->
+      <div id="study-materials" class="w-full bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">📘 Study Materials</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold mb-2">{{ course.name }}</h3>
+            <ul class="list-none ml-2 space-y-2">
+              <li class="flex items-center space-x-2">
+                <i class="fas fa-link text-gray-600"></i>
+                <a href="{{ course.description }}" target="_blank" class="text-blue-600 hover:underline">{{ course.description }}</a>
+              </li>
+              <li class="flex items-center space-x-2">
+                <i class="fab fa-youtube text-red-600"></i>
+                <a href="{{ course.videolink }}" target="_blank" class="text-blue-600 hover:underline">{{ course.videolink }}</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Section -->
+    <div id="review-container" style="display:none;"></div>
+    <div id="review-section" style="display:none; margin-top:30px; width: 100%;"></div>
+  </div>
+    <script>
+ // -------------------- CSRF Token --------------------
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+      const c = cookie.trim();
+      if (c.startsWith(name + '=')) {
+        cookieValue = decodeURIComponent(c.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+const csrftoken = getCookie('csrftoken');
+
+// -------------------- Task Completion --------------------
+const completeTaskBaseURL = "{% url 'complete_task' 0 %}".replace(/0\/$/, '');
+
+document.querySelectorAll('.tick-btn').forEach(button => {
+  button.addEventListener('click', () => {
+    const taskId = button.dataset.taskId;
+    const url = `${completeTaskBaseURL}${taskId}/`;
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': csrftoken,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({})
+    })
+    .then(response => {
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+      return response.json();
+    })
+    .then(data => {
+      if (!data) return;
+
+      if (data.success) {
+        button.textContent = data.is_completed ? 'Undo' : 'Mark Complete';
+        button.style.backgroundColor = data.is_completed ? 'gray' : 'green';
+        button.classList.toggle('undo', data.is_completed);
+
+        document.querySelector('.progress').style.width = data.progress + '%';
+
+        const completedText = document.querySelector('.progress-bar + p');
+        if (completedText) {
+          completedText.textContent = `${data.completed} / ${data.total} tasks completed`;
+        }
+
+        const submitBtn = document.querySelector('.review-btn');
+        if (submitBtn) {
+          submitBtn.style.display = (data.completed === data.total) ? 'inline-block' : 'none';
+        }
+      } else {
+        alert(data.error || 'Task update failed.');
+      }
+    })
+    .catch(error => {
+      console.error('Fetch error:', error);
+      alert('Error: ' + error.message);
+    });
+  });
+});
+
+// -------------------- Load Review Section via AJAX --------------------
+function loadReviewPage() {
+  fetch("{% url 'review_dashboard' %}")
+    .then(response => {
+      if (!response.ok) throw new Error("Failed to load review section.");
+      return response.text();
+    })
+    .then(html => {
+      const reviewSection = document.getElementById("review-section");
+      reviewSection.innerHTML = html;
+      reviewSection.style.display = 'block';  // Show review section on same page
+
+      window.scrollTo({
+        top: reviewSection.offsetTop,
+        behavior: "smooth"
+      });
+
+      // Initialize event handlers for review form/buttons
+      initReviewSectionEvents();
+    })
+    .catch(error => {
+      console.error("Error loading review:", error);
+      alert("Could not load the review section.");
+    });
+}
+
+// -------------------- Handle Help Request Submission --------------------
+function sendHelpRequest(type) {
+  // Check if helpMessage textarea exists in DOM (it only exists in review section)
+  const helpMessageElement = document.getElementById('helpMessage');
+  const message = helpMessageElement ? helpMessageElement.value : '';
+
+  fetch('/review/submit-help/', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'X-CSRFToken': csrftoken
+    },
+    body: `type=${encodeURIComponent(type)}&message=${encodeURIComponent(message)}`
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    alert(data.message);
+    if (data.status === 'success' && helpMessageElement) {
+      helpMessageElement.value = '';
+    }
+  })
+  .catch(error => {
+    console.error('Fetch error:', error);
+    alert('Something went wrong!');
+  });
+}
+
+// -------------------- Initialize review section event listeners --------------------
+function initReviewSectionEvents() {
+  // Help buttons inside review section
+  const buttons = document.querySelectorAll('#review-section [data-help-type]');
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      const type = button.getAttribute('data-help-type');
+      sendHelpRequest(type);
+    });
+  });
+
+  // Review form submission inside review section
+  const reviewForm = document.getElementById('reviewForm');
+  if (reviewForm) {
+    reviewForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const formData = new FormData(reviewForm);
+
+      fetch(reviewForm.action, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': csrftoken,
+          'Accept': 'application/json',
+        },
+        body: formData,
+      })
+      .then(response => {
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        return response.json();
+      })
+      .then(data => {
+        if (data.status === 'success') {
+          alert('Review submitted successfully!');
+          document.getElementById('review-section').style.display = 'none';
+          // Optionally refresh or update dashboard content here
+        } else {
+          alert(data.message || 'Failed to submit review.');
+        }
+      })
+      .catch(error => {
+        console.error('Error submitting review:', error);
+        alert('Something went wrong while submitting review.');
+      });
+    });
+  }
+}
+
+</script>
+
+{% block content%}
+
+{% endblock content%}
+</body>
+</html>

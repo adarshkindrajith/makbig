@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome for eye icon -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gradient-to-br from-indigo-100 to-blue-200 flex justify-center items-center min-h-screen px-4">
+
+  <!-- Login Form Container -->
+  <div id="login-form" class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md">
+    <h2 class="text-3xl font-extrabold text-center text-indigo-700 mb-6">
+      🧑🏻‍💻Academic Coordinator Login
+    </h2>
+
+    <!-- Login Form -->
+    <form method="POST" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Email Field -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1" for="login-email">
+          {{ form.t_email.label }}
+        </label>
+        {{ form.t_email }}
+      </div>
+
+      <!-- Password Field with eye toggle -->
+      <div>
+        <label class="block text-sm font-semibold text-gray-700 mb-1" for="login-password">
+          {{ form.t_password.label }}
+        </label>
+        <div class="relative">
+          {{ form.t_password }}
+          <button type="button" id="toggle-password" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-600">
+            <i class="fas fa-eye" id="eye-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <div>
+        <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg font-semibold hover:bg-indigo-700 transition duration-200">
+          Sign In
+        </button>
+      </div>
+    </form>
+
+    <!-- Error Messages -->
+    {% for message in messages %}
+      <p class="text-red-500 text-sm mt-3">{{ message }}</p>
+    {% endfor %}
+
+    <!-- Divider -->
+    <div class="mt-6">
+      <div class="flex items-center">
+        <div class="flex-grow border-t border-gray-300"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Eye Toggle Script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const toggleBtn = document.getElementById('toggle-password');
+      const eyeIcon = document.getElementById('eye-icon');
+      const passwordInput = document.querySelector('input[type="password"]');
+
+      if (toggleBtn && passwordInput) {
+        toggleBtn.addEventListener('click', function () {
+          const type = passwordInput.getAttribute('type');
+          if (type === 'password') {
+            passwordInput.setAttribute('type', 'text');
+            eyeIcon.classList.remove('fa-eye');
+            eyeIcon.classList.add('fa-eye-slash');
+          } else {
+            passwordInput.setAttribute('type', 'password');
+            eyeIcon.classList.remove('fa-eye-slash');
+            eyeIcon.classList.add('fa-eye');
+          }
+        });
+      }
+    });
+  </script>
+
+</body>
+</html>

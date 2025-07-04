@@ -1,0 +1,47 @@
+{% extends 'chat/base.html' %}
+{% block content %}
+{% load static %}
+
+<h2>Admin Badge Panel</h2>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Profile</th>
+            <th>Name</th>
+            <th>Current Badge</th>
+            <th>Assign New Badge</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for student in students %}
+        <tr>
+            <td>
+                {% if student.s_profilepicture %}
+                    <img src="{{ student.s_profilepicture.url }}" alt="Profile Picture" style="width: 20%;">
+                {% else %}
+                    <img src="{% static 'chat/default_profile.png' %}" alt="Default Profile Picture" style="width: 20%;">
+                {% endif %}
+            </td>
+            <td>{{ student.s_firstname }} {{ student.s_lastname }}</td>
+            <td>
+                {% if student.badge %}
+                    <img src="{{ student.badge.url }}" alt="Badge" style="width: 40px; height: 40px;">
+                {% else %}
+                    No Badge
+                {% endif %}
+            </td>
+            <td>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="student_id" value="{{ student.s_id }}">
+                    <input type="file" name="badge" />
+                    <input type="submit" value="Upload Badge" />
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Current Week Tasks</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-indigo-100 via-white to-purple-100 min-h-screen py-10 px-4">
+  <div class="max-w-4xl mx-auto bg-white shadow-2xl rounded-3xl p-8 border border-gray-200">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-extrabold text-indigo-700 tracking-wide">
+        Weekly Tasks Overview
+      </h2>
+      <p class="text-gray-500 text-md mt-2">
+        Student: <span class="font-medium text-gray-800">{{ student.username }}</span> |
+        Week {{ current_module.week }} — <span class="italic">{{ current_module.name }}</span>
+      </p>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="min-w-full table-auto bg-white rounded-lg overflow-hidden">
+        <thead class="bg-indigo-600 text-white">
+          <tr>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Task</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold">Status</th>
+          </tr>
+        </thead>
+        <tbody class="text-gray-700 text-sm">
+          {% for task in task_progress %}
+          <tr class="hover:bg-indigo-50 transition">
+            <td class="px-6 py-4 font-medium">{{ task.task_title }}</td>
+            <td class="px-6 py-4">
+              {% if task.completed %}
+              <span class="inline-block px-3 py-1 text-sm font-semibold text-green-700 bg-green-100 rounded-full shadow-sm animate-pulse">
+                Completed
+              </span>
+              {% else %}
+              <span class="inline-block px-3 py-1 text-sm font-semibold text-red-700 bg-red-100 rounded-full shadow-sm">
+                Incomplete
+              </span>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="2" class="text-center text-gray-500 py-6">No tasks for this week.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="mt-8 text-center">
+      <a href="{% url 'staff_dashboard' %}" class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-lg shadow transition">
+        ← Back to Staff Dashboard
+      </a>
+    </div>
+  </div>
+</body>
+</html>

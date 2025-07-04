@@ -1,0 +1,133 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Registration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+<div class="bg-white shadow-md rounded-lg p-8 w-full max-w-2xl">
+    <h2 class="text-2xl font-bold text-center text-indigo-600 mb-6">STUDENT REGISTRATION</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+
+        <!-- Profile Picture Upload with Preview -->
+        <div class="mb-4 text-center">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Upload Profile Picture</label>
+            <div class="relative w-24 h-24 mx-auto mb-2">
+                <img id="profilePreview" src="https://via.placeholder.com/96" class="w-24 h-24 rounded-full object-cover border border-gray-300" alt="Preview">
+                <button id="profileButton" type="button" class="absolute bottom-0 right-0 bg-indigo-600 text-white rounded-full p-1 hover:bg-indigo-700">
+                    <i class="fas fa-camera"></i>
+                </button>
+            </div>
+            {{ form.s_profilepicture }}
+            <style>
+                #id_s_profilepicture { display: none; }
+            </style>
+        </div>
+
+        <!-- First & Last Name -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+                <input type="text" name="s_firstname" id="id_s_firstname" placeholder="Enter first name"
+                    class="w-full border border-gray-300 rounded-md py-2 px-3 placeholder-gray-400"
+                    value="{{ form.s_firstname.value|default:'' }}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+                <input type="text" name="s_lastname" id="id_s_lastname" placeholder="Enter last name"
+                    class="w-full border border-gray-300 rounded-md py-2 px-3 placeholder-gray-400"
+                    value="{{ form.s_lastname.value|default:'' }}">
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+            <input type="email" name="s_email" id="id_s_email" placeholder="Enter your email"
+                class="w-full border border-gray-300 rounded-md py-2 px-3 placeholder-gray-400"
+                value="{{ form.s_email.value|default:'' }}">
+        </div>
+
+        <!-- Phone & Guardian Phone -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <input type="text" name="s_phonenumber" id="id_s_phonenumber" placeholder="Your phone number"
+                    class="w-full border border-gray-300 rounded-md py-2 px-3 placeholder-gray-400"
+                    value="{{ form.s_phonenumber.value|default:'' }}">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Guardian Phone</label>
+                <input type="text" name="s_guardianphonenumber" id="id_s_guardianphonenumber" placeholder="Guardian's phone number"
+                    class="w-full border border-gray-300 rounded-md py-2 px-3 placeholder-gray-400"
+                    value="{{ form.s_guardianphonenumber.value|default:'' }}">
+            </div>
+        </div>
+
+        <!-- Qualification -->
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Qualification</label>
+            <select name="s_qualification" id="id_s_qualification"
+                class="w-full border border-gray-300 rounded-md py-2 px-3 bg-white text-gray-700">
+                <option value="" disabled selected>Select qualification</option>
+                {% for value, label in form.fields.s_qualification.choices %}
+                <option value="{{ value }}" {% if form.s_qualification.value == value %}selected{% endif %}>
+                {{ label }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <!-- Course Selection -->
+<div>
+    <label class="block text-sm font-medium text-gray-700 mb-1">Select Course</label>
+    <select name="course" id="id_course"
+        class="w-full border border-gray-300 rounded-md py-2 px-3 bg-white text-gray-700">
+        <option value="" disabled selected>Select a course</option>
+        {% for course in form.fields.course.queryset %}
+            <option value="{{ course.id }}" {% if form.course.value == course.id|stringformat:"s" %}selected{% endif %}>
+                {{ course.name }}
+            </option>
+        {% endfor %}
+    </select>
+</div>
+
+
+
+        <!-- Submit Button -->
+        <div>
+            <button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 transition font-semibold">
+                Register Now
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript for file upload -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.getElementById('id_s_profilepicture');
+        const preview = document.getElementById('profilePreview');
+        const button = document.getElementById('profileButton');
+
+        button.addEventListener('click', function () {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+            }
+        });
+    });
+    
+</script>
+
+</body>
+</html>
