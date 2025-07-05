@@ -3,8 +3,6 @@
 {% load humanize %}
 {% block content %}
 
-<!-- Keep all your CSS and JS includes unchanged -->
-
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
 <script>
@@ -23,37 +21,29 @@
     }
 </script>
 
-<!-- Layout and structure unchanged -->
-
 <div class="flex h-screen overflow-hidden">
     <div class="flex-1 flex flex-col overflow-hidden">
         
-        <!-- Header -->
-        <header class="bg-white border-b border-gray-200 p-1 flex items-center justify-between">
-            <div>
-                <h1 class="text-xl font-bold text-makblue">makBig Admin Panel</h1>
+        <header class="bg-white flex items-center">
+            <div class="flex-1 flex py-1 flex-col items-center justify-center">
+                <h1 class="text-lg font-bold text-makblue">makBig Admin Panel</h1>
                 <p class="text-xs text-gray-500">Chat control section</p>
             </div>
-            <h2 class="text-lg font-bold text-gray-800">Admin Chat Overview</h2>
-            <div class="flex space-x-2">
-                <a href="{% url 'chatroom' %}" class="p-2 text-gray-500 hover:text-makblue hover:bg-gray-100 rounded-full" title="Back to Chatroom">
-                    <i class="fas fa-arrow-left"></i>
+            <div class="flex">
+                <a href="{% url 'student_logout' %}" class="p-2 text-red-500 hover:text-white hover:bg-red-400 rounded-full" title="Sign-out Now">
+                    <i class="fas fa-sign-out-alt"></i>
                 </a>
             </div>
         </header>
 
-        <!-- Pinned Messages Section -->
+        
         <main id="main-chat-container" class="flex-1 overflow-y-auto bg-makgray relative">
             <div class="bg-white rounded-lg shadow-md mb-4 sticky top-0 z-10">
-                <div class="p-2 border-b border-gray-200 flex items-center justify-between">
-                    <h3 class="text-md font-semibold text-gray-800">
-                        <i class="fas fa-thumbtack mr-2 text-makblue"></i>Pinned Messages (Admin View)
-                    </h3>
-                </div>
-                <div id="pinned-zone" class="p-2 space-y-1">
+                <div id="pinned-zone" class="p-2 flex flex-wrap items-start gap-2">
+
                     {% for msg in messages %}
                         {% if msg.pinned %}
-                            <div class="flex items-start message-item border-b border-gray-100 pb-1 last:border-b-0" data-msg-id="{{ msg.id }}" id="msg-{{ msg.id }}">
+                            <div class="flex items-start message-item  pb-1 last:border-b-0" data-msg-id="{{ msg.id }}" id="msg-{{ msg.id }}">
                                 
                                 <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% else %}{% static 'profile' %}{% endif %}" alt="User" class="w-10 h-10 rounded-full mr-2 mt-1">
                                 
@@ -99,80 +89,106 @@
                 </div>
             </div>
 
-            <!-- Main Chat Messages -->
+            
             <div id="chat-box" class="space-y-3 p-3">
                 {% for msg in messages %}
                     {% if not msg.pinned %}
-                        <div class="bg-white rounded-lg shadow-sm overflow-hidden message-item" data-msg-id="{{ msg.id }}" id="msg-{{ msg.id }}">
+                        <div class="rounded-lg shadow-sm overflow-hidden message-item" data-msg-id="{{ msg.id }}" id="msg-{{ msg.id }}">
                             <div class="p-3">
                                 <div class="flex items-start">
                                     <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" alt="User" class="w-10 h-10 rounded-full mr-2 mt-1">
+                                    
                                     <div class="flex-1">
                                         <div class="flex items-center">
                                             <span class="font-bold text-md mr-2">
-                                                {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
+                                                {% if msg.student %}
+                                                    {{ msg.student.s_firstname }} {{ msg.student.s_lastname }}
+                                                {% else %}
+                                                    {{ msg.superuser.first_name }} {{ msg.superuser.last_name }}
+                                                {% endif %}
                                             </span>
+                                            
                                             {% if msg.student and msg.student.badge %}
-                                                <img src="{{ msg.student.badge.url }}" alt="Badge" class="w-8 h-8 rounded-full mr-1">
+                                                <img src="{{ msg.student.badge.url }}" alt="Badge" class="w-4 h-4 rounded-full mr-1">
                                             {% endif %}
+
                                             <span class="text-md text-gray-500 ml-auto">{{ msg.timestamp|timesince }} ago</span>
                                         </div>
 
                                         {% if msg.replied_to %}
                                             <div class="bg-gray-100 p-2 rounded-md border-l-4 border-makblue mb-2 reply-info">
-                                                <p class="text-sm text-gray-600">Replying to 
+                                                <p class="text-sm text-gray-600">
+                                                    Replying to 
                                                     <span class="font-semibold">
-                                                        {% if msg.replied_to.student %}{{ msg.replied_to.student.s_firstname }} {{ msg.replied_to.student.s_lastname }}{% else %}{{ msg.replied_to.superuser.first_name }} {{ msg.replied_to.superuser.last_name }}{% endif %}
+                                                        {% if msg.replied_to.student %}
+                                                            {{ msg.replied_to.student.s_firstname }} {{ msg.replied_to.student.s_lastname }}
+                                                        {% else %}
+                                                            {{ msg.replied_to.superuser.first_name }} {{ msg.replied_to.superuser.last_name }}
+                                                        {% endif %}
                                                     </span>:
                                                 </p>
                                                 <p class="text-sm italic text-gray-700">{{ msg.replied_to.content|truncatechars:50 }}</p>
                                             </div>
                                         {% endif %}
 
-                                        <p class="mt-0.5 text-base {% if msg.reported %}text-makred{% else %}text-gray-700{% endif %} message-content-p">{{ msg.content }}</p>
+                                        <p class="mt-0.5 text-base {% if msg.reported %}text-makred{% else %}text-gray-700{% endif %} message-content-p">
+                                            {{ msg.content }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="bg-gray-50 px-3 py-2 flex justify-end space-x-1">
-                                <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
-                                    <i class="fas fa-trash-alt mr-1"></i>Delete
+                                <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600">
+                                    <i class="fas fa-trash-alt mr-1"></i> Delete
                                 </button>
                                 <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 bg-makgreen text-white text-xs rounded hover:bg-green-600 pin-btn">
                                     <i class="fas fa-thumbtack mr-1"></i> Pin
                                 </button>
-                                
+                                <button onclick="replyToMessage({{ msg.id }}, '{% if msg.student %}{{ msg.student.s_firstname }}{% else %}{{ msg.superuser.first_name }}{% endif %}', '{{ msg.content|escapejs }}')" class="px-2 py-2 bg-makblue text-white text-xs rounded hover:bg-blue-600">
+                                    <i class="fas fa-reply mr-1"></i> Reply
+                                </button>
                             </div>
                         </div>
                     {% endif %}
                 {% endfor %}
             </div>
+
+
         </main>
 
         <!-- Message Input Section for Admin -->
         <div class="p-3 bg-white border-t border-gray-200 flex items-center">
-            <div id="reply-preview" class="hidden bg-gray-100 p-2 border-l-4 border-makblue mb-2 mx-3">
+            
+            <!-- Reply Preview -->
+            <div id="reply-preview" class="hidden bg-gray-100 p-2 border-l-4 border-makblue flex items-center justify-between rounded shadow">
+
                 <p class="text-sm text-gray-600">Replying to <span id="reply-username" class="font-semibold"></span>:</p>
                 <p class="text-sm italic text-gray-700" id="reply-content"></p>
                 <button onclick="cancelReply()" class="text-xs text-makred hover:underline ml-2" id="cancel-reply-btn">Cancel</button>
             </div>
 
-            <div class="flex space-x-2">
-                <input type="text" id="message-input" placeholder="Type your message..." class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-makblue">
+            <!-- Input Section Full Width -->
+            <div class="flex items-center w-full">
+                <input type="text" id="message-input" placeholder="Type your message..." 
+                    class="flex-grow border border-makblue rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-makblue">
+                
                 <button id="send-button" class="ml-2 px-4 py-2 bg-makblue text-white rounded hover:bg-blue-700">
                     <i class="fas fa-paper-plane mr-1"></i> Send
                 </button>
             </div>
+
         </div>
+
 
     </div>
 
     <!-- Sidebar for Reported Messages -->
     <aside class="w-80 bg-white border-l border-gray-200 flex flex-col p-4 shadow-lg overflow-y-auto">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Reported Message Summary</h3>
+        <h3 class="text-md text-center bg-makred-200 font-semibold text-gray-800 mb-4">Reported Message Summary</h3>
         <ul id="reported-messages" class="space-y-3">
             {% for msg in reported_msgs %}
-                <li id="reported-{{ msg.id }}" class="bg-gray-50 rounded-lg p-3 shadow-sm">
+                <li id="reported-{{ msg.id }}" class="bg-gray-100 rounded-lg p-3 shadow-xl">
                     <div class="flex items-start mb-2">
                         <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" alt="Reported User" class="w-10 h-10 rounded-full mr-2">
                         <div class="flex-1">
@@ -191,7 +207,7 @@
                     </button>
                 </li>
             {% empty %}
-                <li id="no-reports" class="bg-gray-50 rounded-lg p-3 text-center text-gray-600">Nothing reported yet 🎉</li>
+                <li id="no-reports" class="rounded-lg p-3 text-center text-gray-600"></li>
             {% endfor %}
         </ul>
     </aside>
@@ -334,11 +350,13 @@
             const repliedContent = data.replied_to.content || '';
 
             replyHtml = `
-                <div class="bg-gray-100 p-2 rounded-md border-l-4 border-makblue mb-2 reply-info">
-                    <p class="text-sm text-gray-600">Replying to <span class="font-semibold">${repliedDisplay}</span>:</p>
-                    <p class="text-sm italic text-gray-700">${repliedContent.slice(0, 50)}${repliedContent.length > 50 ? '...' : ''}</p>
+                <div class="bg-gray-100 p-2 rounded-md border-l-4 mb-2 reply-info cursor-pointer" 
+                    onclick="scrollToMessage(${data.replied_to.id})">
+                    <p class="text-sm text-left text-gray-600">Replying to <span class="font-semibold">${repliedDisplay}</span>:</p>
+                    <p class="text-sm text-left italic text-gray-700">${repliedContent.slice(0, 50)}${repliedContent.length > 50 ? '...' : ''}</p>
                 </div>
             `;
+
         }
 
         const pinButtonText = isPinned ? "Un-pin" : "Pin";
@@ -352,31 +370,78 @@
             </button>
         `;
 
+
+        const isMyMessage = sender.is_superuser === true;
+        const alignmentClass = isMyMessage ? 'justify-end' : 'justify-start';
+        const messageBgClass = isPinned ? 'bg-yellow-100 shadow-2xl hover:bg-yellow-100 rounded-3xl border-l-4 border-yellow-400' : (isMyMessage ? 'bg-white hover:bg-gray-100 shadow-2xl rounded-3xl' : 'bg-white hover:bg-gray-100 shadow-2xl rounded-3xl');
+        const bubbleAlignClass = isMyMessage ? 'text-right' : 'text-left';
+        const pinIconHtml = isPinned ? ` <i class="fas fa-thumbtack text-makyellow mr-2 mt-1"></i>` : '';
+
         const messageInnerHtml = `
-            <div class="p-3">
-                <div class="flex items-start">
-                    <img src="${profilePicSrc}" alt="User" class="w-10 h-10 rounded-full mr-2 mt-1">
-                    <div class="flex-1">
-                        <div class="flex items-center">
-                            <span class="font-bold text-md mr-2">${displayName}</span>
-                            ${badgeSrc && !sender.is_superuser ? `<img src="${badgeSrc}" alt="Badge" class="w-4 h-4 rounded-full mr-1">` : ""}
-                            <span class="text-md text-gray-500 ml-auto">${timeAgo(data.timestamp)}</span>
+            <div class="p-3 flex ${alignmentClass}">
+                <div class="rounded-lg shadow-sm overflow-hidden message-item max-w-lg w-fit ${messageBgClass} p-3">
+
+                    <div class="flex items-start ${bubbleAlignClass}">
+                        
+                        ${pinIconHtml}  <!-- Pin Icon to the Left if Pinned -->
+
+                        <img src="${profilePicSrc}" alt="User" class="w-8 h-8 rounded-full mr-2">
+
+                        <div class="flex-1">
+                            
+                            <div class="flex items-center mb-1 flex-wrap">
+                                <span class="font-bold text-sm mr-1">${displayName}</span>
+                                ${badgeSrc && !sender.is_superuser ? `<img src="${badgeSrc}" alt="Badge" class="w-8 h-8 rounded-full ml-1">` : ""}
+                                <span class="text-xs text-gray-500 ml-auto">${timeAgo(data.timestamp)}</span>
+                            </div>
+
+                            ${replyHtml}
+
+                            <div class="flex justify-between items-start flex-wrap break-words max-w-full">
+                                <p class="text-sm message-content-p ${messageContentClass} text-left break-words flex-1">
+                                    ${data.content}
+                                </p>
+
+                                <div class="flex space-x-1 flex-shrink-0 ">
+                                    <button onclick="replyToMessage(${data.id}, '${safeDisplayName}', '${safeContent}')" 
+                                        class="px-2 py-1 text-makblue text-xs rounded hover:text-blue-600">
+                                        <i class="fas fa-comment px-1"></i>Reply
+                                    </button>
+
+                                    ${
+                                        isMyMessage 
+                                        ? `<button onclick="editMessage(${data.id}, '${safeContent}')" 
+                                            class="px-2 py-1 text-green-600 text-xs rounded hover:text-green-800">
+                                            <i class="fas fa-edit px-1"></i>Edit
+                                        </button>`
+                                        : ''
+                                    }
+
+                                    ${
+                                        data.pinned 
+                                        ? `<button onclick="pinMessage(${data.id})" class="px-2 py-1 text-makyellow hover:text-yellow-600 text-white text-xs rounded pin-btn">
+                                                <i class="fas fa-thumbtack fa-rotate-90 px-1"></i>un-pin
+                                            </button>`
+                                        : `<button onclick="pinMessage(${data.id})" class="px-2 py-1 text-makblue hover:text-blue-600 text-xs rounded pin-btn">
+                                                <i class="fas fa-thumbtack px-1"></i>pin
+                                            </button>`
+                                    }
+
+                                    <button onclick="deleteMessage(${data.id})" 
+                                        class="px-2 py-1 text-makred text-red text-xs rounded hover:text-red-600">
+                                        <i class="fas fa-trash-alt px-1"></i>delete
+                                    </button>
+                                </div>
+
+                            </div>
                         </div>
-                        ${replyHtml}
-                        <p class="mt-0.5 text-base message-content-p ${messageContentClass}">${data.content}</p>
                     </div>
                 </div>
             </div>
-            <div class="bg-gray-50 px-3 py-2 flex justify-end space-x-1">
-                <button onclick="deleteMessage(${data.id})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
-                    <i class="fas fa-trash-alt mr-1"></i> Delete
-                </button>
-                <button onclick="pinMessage(${data.id})" class="px-2 py-2 ${pinButtonColor} text-white text-xs rounded pin-btn">
-                    <i class="fas fa-thumbtack mr-1"></i> ${pinButtonText}
-                </button>
-                ${replyButtonHtml}
-            </div>
         `;
+
+
+
 
         return messageInnerHtml;
     }
@@ -385,51 +450,68 @@
     // Function to add/move message to the appropriate area (chatbox or pinned)
     function addOrMoveMessage(data, isPinned) {
         console.log(`[addOrMoveMessage] Processing message ID: ${data.id}, Pinned: ${isPinned}`);
+        
         if (deletedMessages.has(data.id)) {
             console.log(`[addOrMoveMessage] Message ID: ${data.id} is marked as deleted, skipping.`);
             return;
         }
 
         let existingDiv = document.getElementById(`msg-${data.id}`);
-        
+
         if (existingDiv) {
-            console.log(`[addOrMoveMessage] Removing existing element for ID: ${data.id}`);
-            existingDiv.remove(); // Remove from current location if it exists
+            console.log(`[addOrMoveMessage] Updating existing element for ID: ${data.id}`);
+
+            // Update content
+            existingDiv.innerHTML = createMessageHtml(data, isPinned);
+
+            // Check pinned zone mismatch
+            if (isPinned && existingDiv.parentElement !== pinnedZone) {
+                pinnedZone.appendChild(existingDiv);
+                existingDiv.className = "overflow-hidden message-item border-b border-gray-100 pb-1 last:border-b-0";
+                existingDiv.setAttribute('data-timestamp', new Date(data.timestamp).getTime());
+                console.log(`[addOrMoveMessage] Moved message ID: ${data.id} to pinned zone.`);
+            } else if (!isPinned && existingDiv.parentElement !== chatBox) {
+                chatBox.appendChild(existingDiv);
+                existingDiv.className = "overflow-hidden message-item";
+                console.log(`[addOrMoveMessage] Moved message ID: ${data.id} to chat box.`);
+            }
+            return;
         }
 
+        // Message does not exist yet
         const newDiv = document.createElement("div");
         newDiv.setAttribute("data-msg-id", data.id);
         newDiv.setAttribute("id", `msg-${data.id}`);
         newDiv.innerHTML = createMessageHtml(data, isPinned);
 
         if (isPinned) {
-            newDiv.className = "bg-white rounded-lg shadow-sm overflow-hidden message-item border-b border-gray-100 pb-1 last:border-b-0";
-            // Insert in order of timestamp if possible, otherwise at top for simplicity
+            newDiv.className = "overflow-hidden message-item border-b border-gray-100 pb-1 last:border-b-0";
+            newDiv.setAttribute('data-timestamp', new Date(data.timestamp).getTime());
+
             let inserted = false;
-            // Store message data on the element for sorting (needed if you want complex sorting on the frontend)
-            newDiv.setAttribute('data-timestamp', new Date(data.timestamp).getTime()); 
+            const newTimestamp = new Date(data.timestamp).getTime();
 
             for (let i = 0; i < pinnedZone.children.length; i++) {
                 const existingMsg = pinnedZone.children[i];
                 const existingTimestamp = parseInt(existingMsg.getAttribute('data-timestamp'));
-                const newTimestamp = new Date(data.timestamp).getTime();
-                if (newTimestamp > existingTimestamp) { // Insert newer message before older ones
+                if (newTimestamp > existingTimestamp) {
                     pinnedZone.insertBefore(newDiv, existingMsg);
                     inserted = true;
                     break;
                 }
             }
             if (!inserted) {
-                pinnedZone.appendChild(newDiv); // Add to end if it's the oldest or no other messages
+                pinnedZone.appendChild(newDiv);
             }
-            console.log(`[addOrMoveMessage] Appended message ID: ${data.id} to pinned zone.`);
+            console.log(`[addOrMoveMessage] Appended new message ID: ${data.id} to pinned zone.`);
         } else {
-            newDiv.className = "bg-white rounded-lg shadow-sm overflow-hidden message-item";
+            newDiv.className = "overflow-hidden message-item";
             chatBox.appendChild(newDiv);
-            mainChatContainer.scrollTop = mainChatContainer.scrollHeight; // Scroll to bottom for new messages
-            console.log(`[addOrMoveMessage] Appended message ID: ${data.id} to chat box and scrolled down.`);
+            mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
+            console.log(`[addOrMoveMessage] Appended new message ID: ${data.id} to chat box.`);
         }
     }
+
 
     // Function to update the reported messages sidebar
     function updateReportedSidebar(data) {
@@ -494,8 +576,8 @@
                 console.log("[updateReportedSidebar] All reported messages removed, adding placeholder.");
                 const li = document.createElement("li");
                 li.id = "no-reports";
-                li.className = "bg-gray-50 rounded-lg p-3 text-center text-gray-600";
-                li.innerText = "Nothing reported yet 🎉";
+                li.className = "text-sm rounded-lg p-3 text-center text-gray-600";
+                li.innerText = "Nothing reported yet";
                 reportedMessagesList.appendChild(li);
             }
         }
@@ -595,8 +677,8 @@
                 console.log("[onmessage] No more reported messages, adding placeholder.");
                 const li = document.createElement("li");
                 li.id = "no-reports";
-                li.className = "bg-gray-50 rounded-lg p-3 text-center text-gray-600";
-                li.innerText = "Nothing reported yet 🎉";
+                li.className = "text-sm rounded-lg p-3 text-center text-gray-600";
+                li.innerText = "Nothing reported yet";
                 reportedMessagesList.appendChild(li);
             }
             return; // Stop further processing
@@ -632,16 +714,33 @@
 
         sendButton.addEventListener("click", () => {
             const message = messageInput.value.trim();
-            if (message) {
+            if (!message) return;
+
+            if (editingMessageId) {
                 chatSocket.send(JSON.stringify({
-                    type: "message",
-                    message: message,
-                    replied_to: replyingToMessageId
+                    type: "edit",
+                    id: editingMessageId,
+                    message: message
                 }));
+                editingMessageId = null;
+                sendButton.textContent = "Send";
                 messageInput.value = "";
+                hideCancelEditButton();
                 cancelReply();
+                return;
             }
+
+            chatSocket.send(JSON.stringify({
+                type: "message",
+                message: message,
+                replied_to: replyingToMessageId
+            }));
+
+            messageInput.value = "";
+            cancelReply();
         });
+
+
 
         messageInput.addEventListener("keydown", (e) => {
             if (e.key === "Enter") {
@@ -651,6 +750,74 @@
     
     
     });
+
+
+    function scrollToMessage(messageId) {
+        const targetMessage = document.getElementById(`msg-${messageId}`);
+        if (targetMessage) {
+            targetMessage.scrollIntoView({ behavior: "smooth", block: "center" });
+            targetMessage.classList.add('ring-gray', 'bg-blue-100'); // Optional highlight effect
+            setTimeout(() => {
+                targetMessage.classList.remove('ring-gray', 'bg-blue-100');
+            }, 2000);
+        } else {
+            console.warn(`[scrollToMessage] Message ID: msg-${messageId} not found in DOM.`);
+        }
+    }
+
+
+    let editingMessageId = null;
+
+    function editMessage(id, currentContent) {
+        messageInput.value = currentContent;
+        messageInput.focus();
+        editingMessageId = id;
+        replyingToMessageId = null; // Cancel reply if editing
+
+        const sendButton = document.getElementById("send-button");
+        if (sendButton) {
+            sendButton.textContent = "Save";
+        }
+
+        showCancelEditButton();  // Show cancel button when editing
+
+        console.log(`[editMessage] Editing message ID: ${id}`);
+    }
+
+    function cancelEdit() {
+        messageInput.value = "";
+        editingMessageId = null;
+        const sendButton = document.getElementById("send-button");
+        if (sendButton) {
+            sendButton.textContent = "Send";
+        }
+        hideCancelEditButton();
+        cancelReply();  // Optional: Also clear reply if needed
+    }
+
+    function showCancelEditButton() {
+        let cancelBtn = document.getElementById("cancel-edit-btn");
+        if (!cancelBtn) {
+            cancelBtn = document.createElement("button");
+            cancelBtn.id = "cancel-edit-btn";
+            cancelBtn.textContent = "Cancel Edit";
+            cancelBtn.className = "ml-2 px-2 py-1 bg-red-500 text-white rounded";
+            messageInput.parentElement.appendChild(cancelBtn);
+
+            cancelBtn.addEventListener("click", cancelEdit);
+        } else {
+            cancelBtn.style.display = "inline-block";
+        }
+    }
+
+    function hideCancelEditButton() {
+        const cancelBtn = document.getElementById("cancel-edit-btn");
+        if (cancelBtn) {
+            cancelBtn.style.display = "none";
+        }
+    }
+
+
 
 </script>
 {% endblock content %}

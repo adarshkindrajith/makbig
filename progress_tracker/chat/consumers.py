@@ -17,26 +17,27 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
         await self.accept()
 
-        messages_data = await self.get_chat_history()
+        messages_data = [await self._serialize_message(msg) for msg in await self.get_chat_history()]
         await self.send(text_data=json.dumps({
             'type': 'chat_history',
             'messages': messages_data
         }))
 
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(
-            self.room_group_name,
-            self.channel_name
-        )
+        try:
+            await self.channel_layer.group_discard(
+                self.room_group_name,
+                self.channel_name
+            )
+        except Exception as e:
+            print(f"Disconnect error: {e}")
 
     async def receive(self, text_data):
         data = json.loads(text_data)
         message_type = data.get('type')
 
         if not self.scope["user"].is_authenticated:
-            await self.send(text_data=json.dumps({
-                'error': 'User not authenticated'
-            }))
+            await self.send(text_data=json.dumps({'error': 'User not authenticated'}))
             return
 
         user = self.scope["user"]
@@ -48,10 +49,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
             await self.channel_layer.group_send(
                 self.room_group_name,
-                {
-                    'type': 'chat_message',
-                    'message_data': new_message_data
-                }
+                {'type': 'chat_message', 'message_data': new_message_data}
             )
 
         elif message_type == 'report':
@@ -60,17 +58,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if updated_message_data:
                 await self.channel_layer.group_send(
                     self.room_group_name,
-                    {
-                        'type': 'chat_message',
-                        'message_data': updated_message_data
-                    }
+                    {'type': 'chat_message', 'message_data': updated_message_data}
                 )
 
         elif message_type == 'pin':
             if not user.is_superuser:
-                await self.send(text_data=json.dumps({
-                    'error': 'You are not authorized to pin messages.'
-                }))
+                await self.send(text_data=json.dumps({'error': 'You are not authorized to pin messages.'}))
                 return
 
             message_id = data['id']
@@ -79,17 +72,12 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if updated_message_data:
                 await self.channel_layer.group_send(
                     self.room_group_name,
-                    {
-                        'type': 'chat_message',
-                        'message_data': updated_message_data
-                    }
+                    {'type': 'chat_message', 'message_data': updated_message_data}
                 )
 
         elif message_type == 'delete':
             if not user.is_superuser:
-                await self.send(text_data=json.dumps({
-                    'error': 'You are not authorized to delete messages.'
-                }))
+                await self.send(text_data=json.dumps({'error': 'You are not authorized to delete messages.'}))
                 return
 
             message_id = data['id']
@@ -97,119 +85,88 @@ class ChatConsumer(AsyncWebsocketConsumer):
             if deleted_id:
                 await self.channel_layer.group_send(
                     self.room_group_name,
-                    {
-                        'type': 'delete_message',
-                        'id': deleted_id
-                    }
+                    {'type': 'delete_message', 'id': deleted_id}
                 )
 
         elif message_type == 'edit':
             msg_id = data['id']
             new_content = data['message']
-
             message = await self.get_message_by_id(msg_id)
+
             if message:
                 sender_user = message.student.user if message.student else message.superuser
 
                 if sender_user.id != self.scope["user"].id:
-                    await self.send(text_data=json.dumps({
-                        "error": "You are not authorized to edit this message."
-                    }))
+                    await self.send(text_data=json.dumps({'error': 'You are not authorized to edit this message.'}))
                     return
 
                 message.content = new_content
                 await sync_to_async(message.save)()
 
-                updated_message_data = self._serialize_message(message)
+                updated_message_data = await self._serialize_message(message)
                 await self.channel_layer.group_send(
                     self.room_group_name,
-                    {
-                        "type": "chat_message",
-                        "message_data": updated_message_data
-                    }
+                    {'type': 'chat_message', 'message_data': updated_message_data}
                 )
 
     async def chat_message(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'new_message',
-            'message_data': event['message_data']
-        }))
+        await self.send(text_data=json.dumps({'type': 'new_message', 'message_data': event['message_data']}))
 
     async def delete_message(self, event):
-        await self.send(text_data=json.dumps({
-            'type': 'delete',
-            'id': event['id']
-        }))
+        await self.send(text_data=json.dumps({'type': 'delete', 'id': event['id']}))
 
     @sync_to_async
     def get_chat_history(self):
-        messages = Message.objects.select_related(
-            'student', 'superuser', 'replied_to__student', 'replied_to__superuser'
-        ).order_by('timestamp')
-        return [self._serialize_message(msg) for msg in messages]
+        return list(Message.objects.select_related(
+            'student__user', 'superuser', 'replied_to__student__user', 'replied_to__superuser'
+        ).order_by('timestamp'))
 
     @sync_to_async
     def save_message(self, user, content, replied_to_id):
-        replied_to_message = None
-        if replied_to_id:
-            try:
-                replied_to_message = Message.objects.get(id=replied_to_id)
-            except Message.DoesNotExist:
-                pass
+        replied_to_message = Message.objects.filter(id=replied_to_id).first() if replied_to_id else None
 
         try:
             student_profile = dbstudent1.objects.get(user=user)
-            message = Message.objects.create(
-                student=student_profile,
-                content=content,
-                replied_to=replied_to_message
-            )
+            message = Message.objects.create(student=student_profile, content=content, replied_to=replied_to_message)
         except dbstudent1.DoesNotExist:
-            message = Message.objects.create(
-                superuser=user,
-                content=content,
-                replied_to=replied_to_message
-            )
+            message = Message.objects.create(superuser=user, content=content, replied_to=replied_to_message)
 
-        return self._serialize_message(message)
+        return self._serialize_message_sync(message)
 
     @sync_to_async
     def toggle_report_status(self, message_id):
-        try:
-            message = Message.objects.select_related('student', 'superuser', 'replied_to__student', 'replied_to__superuser').get(id=message_id)
+        message = Message.objects.filter(id=message_id).select_related('student__user', 'superuser').first()
+        if message:
             message.reported = not message.reported
             message.save()
-            return self._serialize_message(message)
-        except Message.DoesNotExist:
-            return None
+            return self._serialize_message_sync(message)
+        return None
 
     @sync_to_async
     def toggle_pin_status(self, message_id, pin_value):
-        try:
-            message = Message.objects.select_related('student', 'superuser', 'replied_to__student', 'replied_to__superuser').get(id=message_id)
+        message = Message.objects.filter(id=message_id).select_related('student__user', 'superuser').first()
+        if message:
             message.pinned = pin_value
             message.save()
-            return self._serialize_message(message)
-        except Message.DoesNotExist:
-            return None
+            return self._serialize_message_sync(message)
+        return None
 
     @sync_to_async
     def delete_message_from_db(self, message_id):
-        try:
-            message = Message.objects.get(id=message_id)
+        message = Message.objects.filter(id=message_id).first()
+        if message:
             message.delete()
             return message_id
-        except Message.DoesNotExist:
-            return None
+        return None
 
     @sync_to_async
     def get_message_by_id(self, msg_id):
-        try:
-            return Message.objects.select_related('student__user', 'superuser').get(id=msg_id)
-        except Message.DoesNotExist:
-            return None
+        return Message.objects.filter(id=msg_id).select_related('student__user', 'superuser').first()
 
-    def _serialize_message(self, message):
+    async def _serialize_message(self, message):
+        return await sync_to_async(self._serialize_message_sync)(message)
+
+    def _serialize_message_sync(self, message):
         sender = message.student or message.superuser
 
         if isinstance(sender, dbstudent1):
@@ -223,12 +180,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
 
         elif isinstance(sender, User):
-            try:
-                admin_profile = AdminProfile.objects.get(user=sender)
-                profile_pic = admin_profile.s_profilepicture.url if admin_profile.s_profilepicture else ''
-            except AdminProfile.DoesNotExist:
-                profile_pic = ''
-
+            admin_profile = AdminProfile.objects.filter(user=sender).first()
+            profile_pic = admin_profile.s_profilepicture.url if admin_profile and admin_profile.s_profilepicture else ''
             sender_data = {
                 'id': sender.id,
                 'first_name': sender.first_name,
