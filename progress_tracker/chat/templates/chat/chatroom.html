@@ -27,9 +27,9 @@
         }
     </script>
 </head>
-<body>
+<body class="h-screen flex flex-col overflow-hidden">
 
-<!-- Navbar - Blue Background Only at Top -->
+<!-- Navbar -->
 <nav class="fixed top-0 left-0 w-full bg-indigo-700 text-white shadow-lg z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16 items-center">
@@ -50,7 +50,6 @@
             </div>
             {% endif %}
 
-
             <div class="md:hidden">
                 <button id="mobile-menu-btn" class="p-2 rounded-md text-indigo-200 hover:text-white hover:bg-indigo-600">
                     <i class="fas fa-bars"></i>
@@ -60,133 +59,115 @@
     </div>
 </nav>
 
+<!-- Main Chat Layout Wrapper -->
+<div class="flex flex-col flex-1 pt-16 overflow-hidden">
 
-<!-- Chat Header Below Navbar -->
-<div class="sticky top-0 bg-white shadow-sm">
-    <div class="px-5  sticky top-10 z-50 bg-white shadow-sm border-b border-gray-200">
-        <div class="flex items-center justify-center">
-            <h3 class="text-md mt-10 text-makblue">
-                makBig chat <i class="fas fa-comments mr-2"></i>
-            </h3>
-        </div>
+    <!-- Chat Header & Pinned Messages -->
+    <header class="bg-white shadow-sm z-10">
+        <div class="px-5 border-b border-gray-200">
+            <div class="flex items-center justify-center py-3">
+                <h3 class="text-md text-makblue">
+                    makBig chat <i class="fas fa-comments mr-2"></i>
+                </h3>
+            </div>
 
-        <div id="pinned-zone" class="p-2 flex flex-wrap items-center space-x-3">
-        
-            {% for msg in messages %}
-                {% if msg.pinned %}
-                <div class="p-2 bg-yellow-50 rounded-lg shadow-sm border border-yellow-100 message-item flex flex-col flex-shrink-0 max-w-xs" data-msg-id="{{ msg.id }}">
-                    <!-- First Row: Profile, Name, Badge, Time -->
-                    <div class="flex items-center space-x-2 mb-1">
-                        <i class="fas fa-thumbtack text-makblue text-sm"></i>
-                        
-                        <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" 
-                            class="w-7 h-7 rounded-full">
-
-                        <span class="font-medium text-gray-800 text-sm truncate">
-                            {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
-                        </span>
-
-                        {% if msg.student and msg.student.badge %}
-                            <img src="{{ msg.student.badge.url }}" class="w-4 h-4 rounded-full">
-                        {% endif %}
-
-                        <span class="text-xs text-black ml-auto">{{ msg.timestamp|timesince }} ago</span>
-                    </div>
-
-                    <!-- Second Row: Message Content & Reply -->
-                    <div class="flex items-center flex-wrap">
-                        
-                        <p class="text-gray-700 text-sm mr-2 truncate max-w-[150px]">
-                            {{ msg.content }}
-                        </p>
-
-                        <button onclick="replyToMessage('{{ msg.id }}', `{% if msg.student %}{{ msg.student.s_firstname }}{% else %}{{ msg.superuser.first_name }}{% endif %}`, '{{ msg.content|escapejs }}')" 
-                            class="text-blue-600 hover:text-blue-800 text-xs mx-5 flex items-center">
-                            <i class="fas fa-reply mr-1"></i>
-                        </button>
-
-                    </div>
-
-                </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-
-
-<main id="main-chat-container" class="px-10 flex-1 overflow-y-auto pt-20 pb-20 bg-gray-200 p-3 space-y-3">
-    <!-- Main Chat Messages -->
-    <div id="chat-box" class=" space-y-3">
-        {% for msg in messages %}
-            {% if not msg.pinned %}
-            <div class="bg-white rounded-lg shadow-sm overflow-hidden message-item" data-msg-id="{{ msg.id }}">
-                <div class="p-3">
-                    <div class="flex items-start ">
-                        <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" class="w-10 h-10 rounded-full mr-2 mt-1">
-                        <div class="flex-1">
-                            <div class="flex items-center">
-                                <span class="font-bold text-md mr-2">
-                                    {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
-                                </span>
-                                {% if msg.student and msg.student.badge %}
-                                    <img src="{{ msg.student.badge.url }}" class="w-8 h-8 rounded-full mr-1">
-                                {% endif %}
-                                <span class="text-xs text-gray-500 ml-auto">{{ msg.timestamp|timesince }} ago</span>
-                            </div>
-                            {% if msg.replied_to %}
-                            <div class="bg-gray-100 p-2 rounded-md border-l-4 border-makblue mb-2">
-                                <p class="text-sm text-gray-600">Replying to 
-                                    <span class="font-semibold">
-                                        {% if msg.replied_to.student %}{{ msg.replied_to.student.s_firstname }} {{ msg.replied_to.student.s_lastname }}{% else %}{{ msg.replied_to.superuser.first_name }} {{ msg.replied_to.superuser.last_name }}{% endif %}
-                                    </span>:
-                                </p>
-                                <p class="text-sm italic text-gray-700">{{ msg.replied_to.content|truncatechars:50 }}</p>
-                            </div>
+            <div id="pinned-zone" class="p-2 flex flex-wrap items-center space-x-3">
+                {% for msg in messages %}
+                    {% if msg.pinned %}
+                    <div class="p-2 bg-yellow-50 rounded-lg shadow-sm border border-yellow-100 message-item flex flex-col flex-shrink-0 max-w-xs">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <i class="fas fa-thumbtack text-makblue text-sm"></i>
+                            <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" class="w-7 h-7 rounded-full">
+                            <span class="font-medium text-gray-800 text-sm truncate">
+                                {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
+                            </span>
+                            {% if msg.student and msg.student.badge %}
+                                <img src="{{ msg.student.badge.url }}" class="w-4 h-4 rounded-full">
                             {% endif %}
-                            <p class="mt-0.5 text-base {% if msg.reported and user.is_superuser %}text-makred{% else %}text-gray-700{% endif %}">{{ msg.content }}</p>
-                            <div class="flex justify-end mt-1">
-                                {% if user.is_superuser %}
-                                <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
-                                    <i class="fas fa-trash-alt mr-1"></i> Delete
-                                </button>
-                                <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 bg-makgreen text-white text-xs rounded hover:bg-green-600">
-                                    <i class="fas fa-thumbtack mr-1"></i> Pin
-                                </button>
-                                {% else %}
-                                <button id="report-btn-{{ msg.id }}" onclick="toggleReport({{ msg.id }})" class="px-2 py-2 text-white text-xs rounded report-btn {% if msg.reported %}bg-makred{% else %}bg-makyellow{% endif %}">
-                                    <i class="fas fa-flag mr-1"></i> {% if msg.reported %}{% else %}{% endif %}
-                                </button>
+                            <span class="text-xs text-black ml-auto">{{ msg.timestamp|timesince }} ago</span>
+                        </div>
+
+                        <div class="flex items-center flex-wrap">
+                            <p class="text-gray-700 text-sm mr-2 truncate max-w-[150px]">{{ msg.content }}</p>
+                            <button onclick="replyToMessage('{{ msg.id }}', `{% if msg.student %}{{ msg.student.s_firstname }}{% else %}{{ msg.superuser.first_name }}{% endif %}`, '{{ msg.content|escapejs }}')" class="text-blue-600 hover:text-blue-800 text-xs mx-5 flex items-center">
+                                <i class="fas fa-reply mr-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </header>
+
+    <!-- Chat Messages Scroll Area -->
+    <main id="main-chat-container" class="flex-1 overflow-y-auto bg-gray-200 p-5 space-y-3">
+        <div id="chat-box" class="space-y-3">
+            {% for msg in messages %}
+                {% if not msg.pinned %}
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden message-item" data-msg-id="{{ msg.id }}">
+                    <div class="p-3">
+                        <div class="flex items-start">
+                            <img src="{% if msg.student and msg.student.s_profilepicture %}{{ msg.student.s_profilepicture.url }}{% elif msg.superuser and msg.superuser.adminprofile.s_profilepicture %}{{ msg.superuser.adminprofile.s_profilepicture.url }}{% else %}{% static 'profile_pics/wallpaper.jpg' %}{% endif %}" class="w-10 h-10 rounded-full mr-2 mt-1">
+                            <div class="flex-1">
+                                <div class="flex items-center">
+                                    <span class="font-bold text-md mr-2">
+                                        {% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}
+                                    </span>
+                                    {% if msg.student and msg.student.badge %}
+                                        <img src="{{ msg.student.badge.url }}" class="w-8 h-8 rounded-full mr-1">
+                                    {% endif %}
+                                    <span class="text-xs text-gray-500 ml-auto">{{ msg.timestamp|timesince }} ago</span>
+                                </div>
+                                {% if msg.replied_to %}
+                                <div class="bg-gray-100 p-2 rounded-md border-l-4 border-makblue mb-2">
+                                    <p class="text-sm text-gray-600">Replying to <span class="font-semibold">{% if msg.replied_to.student %}{{ msg.replied_to.student.s_firstname }} {{ msg.replied_to.student.s_lastname }}{% else %}{{ msg.replied_to.superuser.first_name }} {{ msg.replied_to.superuser.last_name }}{% endif %}</span>:</p>
+                                    <p class="text-sm italic text-gray-700">{{ msg.replied_to.content|truncatechars:50 }}</p>
+                                </div>
                                 {% endif %}
-                                <button onclick="replyToMessage({{ msg.id }}, '{% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}', '{{ msg.content|escapejs }}')" class="px-2 py-2 bg-makblue text-white text-xs rounded hover:bg-blue-600 ml-1">
-                                    <i class="fas fa-reply mr-1"></i>
-                                </button>
+                                <p class="mt-0.5 text-base {% if msg.reported and user.is_superuser %}text-makred{% else %}text-gray-700{% endif %}">{{ msg.content }}</p>
+                                <div class="flex justify-end mt-1">
+                                    {% if user.is_superuser %}
+                                    <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
+                                        <i class="fas fa-trash-alt mr-1"></i> Delete
+                                    </button>
+                                    <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 bg-makgreen text-white text-xs rounded hover:bg-green-600">
+                                        <i class="fas fa-thumbtack mr-1"></i> Pin
+                                    </button>
+                                    {% else %}
+                                    <button id="report-btn-{{ msg.id }}" onclick="toggleReport({{ msg.id }})" class="px-2 py-2 text-white text-xs rounded report-btn {% if msg.reported %}bg-makred{% else %}bg-makyellow{% endif %}">
+                                        <i class="fas fa-flag mr-1"></i>
+                                    </button>
+                                    {% endif %}
+                                    <button onclick="replyToMessage({{ msg.id }}, '{% if msg.student %}{{ msg.student.s_firstname }} {{ msg.student.s_lastname }}{% else %}{{ msg.superuser.first_name }} {{ msg.superuser.last_name }}{% endif %}', '{{ msg.content|escapejs }}')" class="px-2 py-2 bg-makblue text-white text-xs rounded hover:bg-blue-600 ml-1">
+                                        <i class="fas fa-reply mr-1"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            {% endif %}
-        {% endfor %}
-    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    </main>
 
-</main>
+    <!-- Fixed Footer Input -->
+    <footer class="px-10 bg-white w-full border-t border-gray-200 p-2 flex items-center">
+        <div id="reply-preview" class="hidden bg-gray-100 p-2 border-l-4 border-makblue mb-2 mx-3 w-full">
+            <p class="text-sm text-gray-600">Replying to <span id="reply-username" class="font-semibold"></span>:</p>
+            <p class="text-sm italic text-gray-700" id="reply-content"></p>
+            <button onclick="cancelReply()" class="text-xs text-makred hover:underline ml-2" id="cancel-reply-btn">Cancel</button>
+        </div>
+        <form id="chat-form" class="flex-1 flex space-x-2">
+            <input id="message-input" type="text" placeholder="Type a message..." class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:border-makblue">
+            <button type="submit" class="px-4 py-2 bg-makblue text-white rounded-lg hover:bg-blue-600">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </form>
+    </footer>
 
-<!-- Footer Input Bar -->
-<footer class="px-10 fixed bottom-0 left-0 bg-white w-full border-t border-gray-200 p-2 flex items-center z-50">
-    <div id="reply-preview" class="hidden bg-gray-100 p-2 border-l-4 border-makblue mb-2 mx-3 w-full">
-        <p class="text-sm text-gray-600">Replying to <span id="reply-username" class="font-semibold"></span>:</p>
-        <p class="text-sm italic text-gray-700" id="reply-content"></p>
-        <button onclick="cancelReply()" class="text-xs text-makred hover:underline ml-2" id="cancel-reply-btn">Cancel</button>
-    </div>
-    <form id="chat-form" class="flex-1 flex space-x-2">
-        <input id="message-input" type="text" placeholder="Type a message..." class="flex-1 border rounded-lg px-3 py-2 focus:outline-none focus:ring focus:border-makblue">
-        <button type="submit" class="px-4 py-2 bg-makblue text-white rounded-lg hover:bg-blue-600">
-            <i class="fas fa-paper-plane"></i>
-        </button>
-    </form>
-</footer>
-
-
+</div>
 
 <script>
 const currentUsername = "{{ user.username|escapejs }}";
@@ -220,13 +201,7 @@ const chatSocket = new WebSocket(`${protocol}://${location.host}/ws/chat/`);
 const deletedMessages = new Set();
 
 
-// --- Helper Functions for UI Manipulation ---
 
-/**
- * Converts a timestamp string to a human-readable "time ago" format.
- * @param {string} timestampString
- * @returns {string}
- */
 function timeAgo(timestampString) {
     const date = new Date(timestampString);
     const seconds = Math.floor((new Date() - date) / 1000);
@@ -247,6 +222,19 @@ function timeAgo(timestampString) {
         }
     }
     return 'just now';
+}
+
+
+
+
+//autoscroll
+
+let suppressAutoScroll = false;
+
+function scrollToBottom() {
+    if (mainChatContainer) {
+        mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
+    }
 }
 
 /**
@@ -278,11 +266,13 @@ function createMessageHtml(messageData) {
         const repliedToDisplayName = `${repliedToSender.first_name || repliedToSender.s_firstname || ''} ${repliedToSender.last_name || repliedToSender.s_lastname || ''}`.trim() || repliedToSender.username || 'Unknown User';
         const sanitizedReplyContent = messageData.replied_to.content.replace(/</g, "&lt;").replace(/>/g, "&gt;").slice(0, 50);
         replyHtml = `
-            <div class="bg-gray-100 px-3 py-2 rounded-2xl border-l-3 border-makblue mb-1 reply-info">
+            <div class="bg-gray-100 px-3 py-2 rounded-2xl border-l-3 border-makblue mb-1 reply-info cursor-pointer" 
+                onclick="scrollToOriginalMessage(${messageData.replied_to.id})">
                 <p class="text-xs text-gray-600">Replying to <span class="font-semibold">${repliedToDisplayName}</span>:</p>
                 <p class="text-xs italic text-gray-700">${sanitizedReplyContent}${messageData.replied_to.content.length > 50 ? '...' : ''}</p>
             </div>
         `;
+
     }
 
     const showReportButton = !IS_SUPERUSER && !isMyOwnMessage && !isSenderSuperuser && !isPinned;
@@ -497,13 +487,6 @@ function createMessageHtml(messageData) {
                 chatBox.appendChild(newMessageDiv);
             }
 
-            // Scroll to bottom for new messages or when a message is unpinned and moves to main chat
-            if (!messageData.pinned || (existingMessageDiv && !messageData.pinned)) {
-                setTimeout(() => {
-                    mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
-                }, 50);
-            }
-            
         }
 
 
@@ -611,6 +594,8 @@ function createMessageHtml(messageData) {
                 }
                 renderMessage(msg); // Use the unified renderMessage function
             });
+            setTimeout(scrollToBottom, 100); // Delay ensures messages render before scroll
+
 
             // Ensure reported messages list has placeholder if empty after history load
             if (IS_SUPERUSER && reportedMessagesList && !reportedMessagesList.querySelector("li[id^='reported-']")) {
@@ -621,11 +606,7 @@ function createMessageHtml(messageData) {
                 reportedMessagesList.appendChild(li);
             }
 
-            if (mainChatContainer) {
-                setTimeout(() => {
-                    mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
-                }, 50);
-            }
+            
             return;
         }
 
@@ -705,6 +686,14 @@ function createMessageHtml(messageData) {
                 };
             }
             renderMessage(messageData);
+            
+            if (!suppressAutoScroll) {
+                setTimeout(scrollToBottom, 50);
+            } else {
+                console.log("[AutoScroll] Skipped due to report/edit action.");
+                suppressAutoScroll = false;  // Reset flag after skipping
+            }
+
         } else {
             console.warn("[onmessage] Received unexpected WebSocket message format or missing 'message_data':", data);
         }
@@ -713,11 +702,7 @@ function createMessageHtml(messageData) {
     chatSocket.onopen = e => {
         console.log("WebSocket connected successfully!");
         // Initial scroll to bottom when connection opens, in case history is long
-        if (mainChatContainer) {
-            setTimeout(() => {
-                mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
-            }, 50);
-        }
+        
     };
 
     chatSocket.onclose = e => {
@@ -775,6 +760,8 @@ function createMessageHtml(messageData) {
                 return;
             }
 
+            suppressAutoScroll = true;
+
             console.log(`[toggleReport] Sending report/unreport request for message ID: ${id}`);
             chatSocket.send(JSON.stringify({
                 type: "report",
@@ -814,9 +801,7 @@ function createMessageHtml(messageData) {
             if (replyContent) replyContent.textContent = messageContent;
             if (replyPreview) replyPreview.classList.remove("hidden");
             if (messageInput) messageInput.focus();
-            if (mainChatContainer) setTimeout(() => {
-                mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
-            }, 50);
+            
             console.log(`[replyToMessage] Replying to message ID: ${messageId}`);
         };
     }
@@ -831,12 +816,48 @@ function createMessageHtml(messageData) {
         };
     }
 
+
+    if (typeof scrollToOriginalMessage === 'undefined') {
+        window.scrollToOriginalMessage = function (messageId) {
+            const originalMsgDiv = document.getElementById(`msg-${messageId}`);
+            if (!originalMsgDiv) {
+                console.warn(`[scrollToOriginalMessage] Message with ID ${messageId} not found in DOM.`);
+                return;
+            }
+
+            const container = mainChatContainer;
+
+            // Calculate precise scroll position relative to container
+            const containerRect = container.getBoundingClientRect();
+            const messageRect = originalMsgDiv.getBoundingClientRect();
+
+            const offsetTop = messageRect.top - containerRect.top + container.scrollTop;
+
+            container.scrollTo({
+                top: offsetTop - 20,  // small offset for visibility
+                behavior: 'smooth'
+            });
+
+            // Add temporary highlight
+            originalMsgDiv.classList.add('ring-gray', 'bg-blue-100');
+            setTimeout(() => {
+                originalMsgDiv.classList.remove('ring-gray', 'bg-blue-100');
+            }, 2000);
+        };
+    }
+
+
+
+
+
     //edit function
     if (typeof editMessage === 'undefined') {
         window.editMessage = function (id, currentContent) {
             messageInput.value = currentContent;
             messageInput.focus();
             replyingToMessageId = null; // Cancel reply if editing
+
+            suppressAutoScroll = true;
 
             const sendButton = chatForm.querySelector('button[type="submit"]');
             if (!sendButton) return;
@@ -906,6 +927,8 @@ function createMessageHtml(messageData) {
                 }));
                 messageInput.value = '';
                 cancelReply();
+                setTimeout(scrollToBottom, 50);
+
             } else {
                 console.error("[chatForm] WebSocket is not connected. ReadyState:", chatSocket.readyState);
                 alert("WebSocket is not connected. Please refresh the page.");
@@ -924,12 +947,7 @@ function createMessageHtml(messageData) {
     document.addEventListener('DOMContentLoaded', () => {
         console.log("DOMContentLoaded fired. Initializing UI states.");
         // Initial scroll to bottom for messages rendered by Django template
-        if (mainChatContainer) {
-            setTimeout(() => {
-                mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
-            }, 50);
-        }
-
+       
         // Apply dynamic button visibility for existing messages (initial render from Django)
         document.querySelectorAll('.message-item').forEach(msgDiv => {
             const reportBtn = msgDiv.querySelector('.report-btn');
