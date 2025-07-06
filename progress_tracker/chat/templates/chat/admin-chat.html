@@ -72,15 +72,13 @@
                                     <p class="mt-0.5 text-base font-bold {% if msg.reported %}text-makred{% else %}text-gray-700{% endif %} message-content-p">{{ msg.content }}</p>
 
                                     <div class="flex justify-end mt-1">
-                                        <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600 mr-1">
-                                            <i class="fas fa-trash-alt mr-1"></i>Delete
+                                        <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 text-makred text-sm rounded hover:bg-red-600 mr-1">
+                                            <i class="fas fa-trash-alt mr-1"></i>delete
                                         </button>
-                                        <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 bg-makgreen text-white text-xs rounded hover:bg-green-600 pin-btn">
-                                            <i class="fas fa-thumbtack mr-1"></i> Un-pin
+                                        <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 text-yellow text-sm rounded hover:bg-green-600 pin-btn">
+                                            <i class="fas fa-thumbtack mr-1"></i>pin
                                         </button>
-                                        <button onclick="toggleReport({{ msg.id }})" id="report-btn-{{ msg.id }}" class="px-2 py-2 text-white text-xs rounded report-btn {% if msg.reported %}bg-makred hover:bg-red-600{% else %}bg-makyellow hover:bg-yellow-600{% endif %}">
-                                            <i class="fas fa-flag mr-1"></i> {% if msg.reported %}Un-report{% else %}Report{% endif %}
-                                        </button>
+                                        
                                     </div>
                                 </div>
                             </div>
@@ -139,14 +137,14 @@
                             </div>
 
                             <div class="bg-gray-50 px-3 py-2 flex justify-end space-x-1">
-                                <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 bg-makred text-white text-xs rounded hover:bg-red-600">
-                                    <i class="fas fa-trash-alt mr-1"></i> Delete
+                                <button onclick="deleteMessage({{ msg.id }})" class="px-2 py-2 text-makred text-sm rounded hover:bg-red-600">
+                                    <i class="fas fa-trash-alt mr-1"></i>delete
                                 </button>
-                                <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 bg-makgreen text-white text-xs rounded hover:bg-green-600 pin-btn">
-                                    <i class="fas fa-thumbtack mr-1"></i> Pin
+                                <button onclick="pinMessage({{ msg.id }})" class="px-2 py-2 text-yellow text-sm rounded hover:bg-green-600 pin-btn">
+                                    <i class="fas fa-thumbtack mr-1"></i>pin
                                 </button>
-                                <button onclick="replyToMessage({{ msg.id }}, '{% if msg.student %}{{ msg.student.s_firstname }}{% else %}{{ msg.superuser.first_name }}{% endif %}', '{{ msg.content|escapejs }}')" class="px-2 py-2 bg-makblue text-white text-xs rounded hover:bg-blue-600">
-                                    <i class="fas fa-reply mr-1"></i> Reply
+                                <button onclick="replyToMessage({{ msg.id }}, '{% if msg.student %}{{ msg.student.s_firstname }}{% else %}{{ msg.superuser.first_name }}{% endif %}', '{{ msg.content|escapejs }}')" class="px-2 py-2 text-makblue text-sm rounded hover:bg-blue-600">
+                                    <i class="fas fa-comment px-1"></i> Reply
                                 </button>
                             </div>
                         </div>
@@ -404,14 +402,14 @@
 
                                 <div class="flex space-x-1 flex-shrink-0 ">
                                     <button onclick="replyToMessage(${data.id}, '${safeDisplayName}', '${safeContent}')" 
-                                        class="px-2 py-1 text-makblue text-xs rounded hover:text-blue-600">
+                                        class="px-2 py-1 text-makblue text-xs rounded hover:text-gray-600">
                                         <i class="fas fa-comment px-1"></i>Reply
                                     </button>
 
                                     ${
                                         isMyMessage 
                                         ? `<button onclick="editMessage(${data.id}, '${safeContent}')" 
-                                            class="px-2 py-1 text-green-600 text-xs rounded hover:text-green-800">
+                                            class="px-2 py-1 text-green-600 text-xs rounded hover:text-gray-600">
                                             <i class="fas fa-edit px-1"></i>Edit
                                         </button>`
                                         : ''
@@ -422,13 +420,13 @@
                                         ? `<button onclick="pinMessage(${data.id})" class="px-2 py-1 text-makyellow hover:text-yellow-600 text-white text-xs rounded pin-btn">
                                                 <i class="fas fa-thumbtack fa-rotate-90 px-1"></i>un-pin
                                             </button>`
-                                        : `<button onclick="pinMessage(${data.id})" class="px-2 py-1 text-makblue hover:text-blue-600 text-xs rounded pin-btn">
+                                        : `<button onclick="pinMessage(${data.id})" class="px-2 py-1 text-makblue hover:text-blue-900 text-xs rounded pin-btn">
                                                 <i class="fas fa-thumbtack px-1"></i>pin
                                             </button>`
                                     }
 
                                     <button onclick="deleteMessage(${data.id})" 
-                                        class="px-2 py-1 text-makred text-red text-xs rounded hover:text-red-600">
+                                        class="px-2 py-1 text-makred text-red text-xs rounded hover:text-red-900">
                                         <i class="fas fa-trash-alt px-1"></i>delete
                                     </button>
                                 </div>

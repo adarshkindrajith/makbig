@@ -176,7 +176,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'last_name': sender.s_lastname,
                 'profile_pic': sender.s_profilepicture.url if sender.s_profilepicture else '',
                 'is_superuser': False,
-                'badge': sender.badge.url if sender.badge else '',
+                'badge': sender.badge.image.url if sender.badge and sender.badge.image else '',
+
             }
 
         elif isinstance(sender, User):
@@ -211,7 +212,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
                     'last_name': replied_sender.s_lastname,
                     'profile_pic': replied_sender.s_profilepicture.url if replied_sender.s_profilepicture else '',
                     'is_superuser': False,
-                    'badge': replied_sender.badge.url if replied_sender.badge else '',
+                    'badge': replied_sender.badge.image.url if replied_sender.badge and replied_sender.badge.image else '',
+
                 }
             elif isinstance(replied_sender, User):
                 replied_sender_data = {

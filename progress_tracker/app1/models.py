@@ -1,8 +1,9 @@
 # app1/models.py
 from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
-from learning.models import Course
+from learning.models import Course,Badge
 from django.contrib.auth.models import User
+
 
 
 class AdminProfile(models.Model):
@@ -41,8 +42,7 @@ class dbstudent1(models.Model):
     course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True)
     s_status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     s_password = models.CharField(max_length=128, blank=True)
-    badge = models.ImageField(upload_to='badges/', blank=True, null=True)
-
+    badge = models.ForeignKey(Badge, on_delete=models.SET_NULL, null=True, blank=True)
 
     def save(self, *args, **kwargs):
         if self.s_password and not self.s_password.startswith('pbkdf2_'):
