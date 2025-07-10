@@ -325,6 +325,7 @@ function createMessageHtml(messageData) {
                 <div class="flex-1">
                     <div class="flex items-center ml-auto ">
                         <span class="font-bold text-sm mr-1">${senderDisplayName}</span>
+                        ${sender.is_superuser ? '<i class="fas fa-check-circle text-makblue text-sm ml-1" title="Verified"></i>' : ''}
                         ${badgeUrl ? `<img src="${badgeUrl}" alt="Badge" class="w-8 h-8 rounded-full mr-0.5">` : ""}
                         <span class="text-xs text-gray-500 ml-auto ">${timeAgo(messageData.timestamp)}</span>
                     </div>
@@ -333,14 +334,14 @@ function createMessageHtml(messageData) {
                         <p class="text-sm message-content-p ${messageContentClass} mr-2">${sanitizedContent}</p>
                         
                         <button onclick="replyToMessage(${messageData.id}, '${senderDisplayName.replace(/'/g, "\\'")}', '${messageData.content.replace(/'/g, "\\'")}')" 
-                            class="text-makblue hover:text-gray-700 text-xs ml-2">
+                            class="text-gray-500 hover:text-blue-700 text-xs ml-2">
                             <i class="fas fa-comment px-1"></i>Reply
                         </button>
                         
 
                         ${isMyOwnMessage ? `
                         <button onclick="editMessage(${messageData.id}, '${messageData.content.replace(/'/g, "\\'")}')" 
-                            class="text-makblue hover:text-gray-700 text-xs ml-2">
+                            class="text-gray-500 hover:text-blue-700 text-xs ml-2">
                             <i class="fa fa-pencil-alt px-1"></i>Edit
                         </button>
                         ` : ""}

@@ -389,6 +389,8 @@
                             
                             <div class="flex items-center mb-1 flex-wrap">
                                 <span class="font-bold text-sm mr-1">${displayName}</span>
+                                ${sender.is_superuser ? '<i class="fas fa-check-circle text-makblue text-sm ml-1" title="Verified"></i>' : ''}
+
                                 ${badgeSrc && !sender.is_superuser ? `<img src="${badgeSrc}" alt="Badge" class="w-8 h-8 rounded-full ml-1">` : ""}
                                 <span class="text-xs text-gray-500 ml-auto">${timeAgo(data.timestamp)}</span>
                             </div>
